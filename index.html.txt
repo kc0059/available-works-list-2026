@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Works List - 藝廊作品清單</title>
+    <meta name="description" content="專業藝廊作品管理系統，支援圖片上傳、作品編輯、多格式匯出">
+    <meta name="keywords" content="藝廊,作品清單,藝術品管理,策展">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+
+        .gallery-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .export-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .export-menu button {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            border-radius: 0;
+        }
+
+        .export-menu button:hover {
+            background: #f8f9fa;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .export-menu button:first-child {
+            border-radius: 5px 5px 0 0;
+        }
+
+        .export-menu button:last-child {
+            border-radius: 0 0 5px 5px;
+        }
+
+        /* 圖片上傳樣式 */
+        #dropZone:hover {
+            background: #e3f2fd !important;
+            border-color: #2196F3 !important;
+        }
+
+        #dropZone.dragover {
+            background: #e8f5e8 !important;
+            border-color: #4caf50 !important;
+            transform: scale(1.02);
+        }
+
+        .uploaded-image-item {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .uploaded-image-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .uploaded-image-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .uploaded-image-item .image-name {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .uploaded-image-item .image-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .image-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .image-btn.use {
+            background: #4caf50;
+            color: white;
+        }
+
+        .image-btn.delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .image-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* 創作理念欄位樣式 */
+        .artwork-concept {
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #666;
+            word-wrap: break-word;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+
+        .artwork-concept textarea {
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 8px;
+            font-family: inherit;
+            resize: vertical;
+            font-size: 13px;
+            line-height: 1.4;
+            background: white;
+        }
+
+        .artwork-concept textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th:hover {
+            background: #5a6fd8;
+            cursor: pointer;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .artwork-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-hold {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-sold {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-nfs {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .price {
+            font-weight: bold;
+            color: #28a745;
+            text-align: right;
+        }
+
+        .artist-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .artwork-title {
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .editable {
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 5px;
+        }
+
+        .editable:focus {
+            background: #fff;
+            border: 2px solid #667eea;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .stats {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Available Works List</h1>
+        <h2>作品清單</h2>
+        <p>Gallery Collection - July 2024</p>
+    </div>
+
+    <div class="gallery-info">
+        <strong>聯絡資訊 Contact:</strong> info@gallery.com | Tel: +886-2-xxxx-xxxx<br>
+        <strong>重要說明:</strong> 所有價格以新台幣計算 | 以實際庫存為準 | 不含稅與運費
+    </div>
+
+    <div class="controls">
+        <input type="text" class="search-box" id="searchBox" placeholder="搜尋藝術家、作品名稱或創作理念...">
+        <select class="filter-select" id="statusFilter">
+            <option value="">所有狀態</option>
+            <option value="Available">可購買</option>
+            <option value="On Hold">保留中</option>
+            <option value="Sold">已售出</option>
+            <option value="NFS">非賣品</option>
+        </select>
+        <button class="btn btn-primary" onclick="addNewWork()">+ 新增作品</button>
+        <button class="btn btn-primary" onclick="showImageUploader()">📷 上傳照片</button>
+        <div class="export-dropdown">
+            <button class="btn btn-success" onclick="toggleExportMenu()">匯出資料 ▼</button>
+            <div class="export-menu" id="exportMenu">
+                <button onclick="showTextVersion()">📝 顯示純文字版本</button>
+                <button onclick="exportToPDF()">📄 PDF輸出</button>
+                <button onclick="exportToExcel()">📊 Excel格式</button>
+                <button onclick="exportToCSV()">📄 CSV格式</button>
+                <button onclick="copyToClipboard()">📋 複製表格</button>
+                <button onclick="printList()">🖨️ 列印清單</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖片上傳區域 -->
+    <div id="imageUploadContainer" style="display: none; margin-bottom: 20px;">
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="color: #667eea; margin-bottom: 15px;">📷 上傳作品照片</h3>
+            
+            <div id="dropZone" style="
+                border: 2px dashed #667eea; 
+                border-radius: 10px; 
+                padding: 40px; 
+                text-align: center; 
+                background: #f8f9fa;
+                cursor: pointer;
+                transition: all 0.3s;
+                margin-bottom: 15px;
+            ">
+                <div style="font-size: 48px; color: #667eea; margin-bottom: 15px;">📁</div>
+                <p style="font-size: 16px; color: #666; margin-bottom: 10px;">
+                    <strong>拖曳圖片到這裡，或點擊選擇檔案</strong>
+                </p>
+                <p style="font-size: 14px; color: #999;">
+                    支援 JPG, PNG, GIF 格式，建議大小 2MB 以下
+                </p>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="selectImages()">📁 選擇檔案</button>
+                <button class="btn btn-success" onclick="hideImageUploader()">✅ 完成</button>
+                <button onclick="clearUploadedImages()" style="padding: 10px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ 清除全部</button>
+            </div>
+
+            <!-- 已上傳圖片預覽區 -->
+            <div id="uploadedImagesContainer" style="margin-top: 20px;">
+                <h4 style="color: #667eea; margin-bottom: 10px;">已上傳的圖片：</h4>
+                <div id="uploadedImagesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalWorks">8</div>
+            <div>總作品數</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="availableWorks">6</div>
+            <div>可購買</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalValue">NT$ 2.4M</div>
+            <div>總價值</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="avgPrice">NT$ 350K</div>
+            <div>平均價格</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="worksTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">作品圖片</th>
+                    <th onclick="sortTable(1)">編號</th>
+                    <th onclick="sortTable(2)">藝術家 Artist</th>
+                    <th onclick="sortTable(3)">作品名稱 Title</th>
+                    <th onclick="sortTable(4)">創作理念 Concept</th>
+                    <th onclick="sortTable(5)">年份</th>
+                    <th onclick="sortTable(6)">媒材 Medium</th>
+                    <th onclick="sortTable(7)">尺寸 Size</th>
+                    <th onclick="sortTable(8)">標價 Price</th>
+                    <th onclick="sortTable(9)">狀態 Status</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="worksTableBody">
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-001</td>
+                    <td class="artist-name">陳志明<br><small>Chen Chih-Ming</small></td>
+                    <td class="artwork-title">山水印象 #1<br><small>Landscape Impression #1</small></td>
+                    <td class="artwork-concept">探索自然與心靈的對話，透過色彩層次表達內在情感與外在景觀的和諧統一</td>
+                    <td>2023</td>
+                    <td>油彩、畫布<br><small>Oil on canvas</small></td>
+                    <td>80×100cm</td>
+                    <td class="price">NT$ 350,000</td>
+                    <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-002</td>
+                    <td class="artist-name">李美華<br><small>Li Mei-Hua</small></td>
+                    <td class="artwork-title">花開富貴<br><small>Blooming Prosperity</small></td>
+                    <td class="artwork-concept">運用傳統花卉象徵寓意，結合現代版畫技法，傳達對美好生活的祝願與期盼</td>
+                    <td>2024</td>
+                    <td>絹印版畫<br><small>Silkscreen</small></td>
+                    <td>50×70cm</td>
+                    <td class="price">NT$ 85,000</td>
+                    <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-003</td>
+                    <td class="artist-name">張大偉<br><small>Chang Ta-Wei</small></td>
+                    <td class="artwork-title">永恆的瞬間<br><small>Eternal Moment</small></td>
+                    <td class="artwork-concept">捕捉時間的流逝與永恆，青銅材質象徵不朽，形體蘊含生命的律動與靜謐</td>
+                    <td>2022</td>
+                    <td>青銅<br><small>Bronze</small></td>
+                    <td>45×30×60cm</td>
+                    <td class="price">NT$ 1,200,000</td>
+                    <td><span class="status status-hold" onclick="changeStatus(this)">On Hold</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-004</td>
+                    <td class="artist-name">王小美<br><small>Wang Hsiao-Mei</small></td>
+                    <td class="artwork-title">都市夜景<br><small>City Night</small></td>
+                    <td class="artwork-concept">反思現代都市生活的孤獨與繁華，光影交錯中探尋人與城市的情感連結</td>
+                    <td>2023</td>
+                    <td>壓克力、畫布<br><small>Acrylic on canvas</small></td>
+                    <td>60×80cm</td>
+                    <td class="price">NT$ 280,000</td>
+                    <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-005</td>
+                    <td class="artist-name">林志豪<br><small>Lin Chih-Hao</small></td>
+                    <td class="artwork-title">抽象構成 #5<br><small>Abstract Composition #5</small></td>
+                    <td class="artwork-concept">純粹的色彩與形式對話，超越具象的束縛，直接觸及觀者的情感與直覺</td>
+                    <td>2024</td>
+                    <td>混合媒材<br><small>Mixed media</small></td>
+                    <td>120×150cm</td>
+                    <td class="price">NT$ 450,000</td>
+                    <td><span class="status status-sold" onclick="changeStatus(this)">Sold</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-006</td>
+                    <td class="artist-name">黃雅婷<br><small>Huang Ya-Ting</small></td>
+                    <td class="artwork-title">靜物研究<br><small>Still Life Study</small></td>
+                    <td class="artwork-concept">回歸繪畫本質，在日常物件中發現永恆之美，細膩筆觸傳達寧靜致遠的心境</td>
+                    <td>2023</td>
+                    <td>水彩、紙本<br><small>Watercolor on paper</small></td>
+                    <td>30×40cm</td>
+                    <td class="price">NT$ 65,000</td>
+                    <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-007</td>
+                    <td class="artist-name">蔡文龍<br><small>Tsai Wen-Lung</small></td>
+                    <td class="artwork-title">山川系列 #2<br><small>Mountain Series #2</small></td>
+                    <td class="artwork-concept">以攝影捕捉山川的靈魂，在光影變化中呈現大自然的壯闊與細膩之美</td>
+                    <td>2022</td>
+                    <td>攝影<br><small>Photography</small></td>
+                    <td>80×120cm</td>
+                    <td class="price">NT$ 120,000</td>
+                    <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+                <tr>
+                    <td><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E作品圖%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片"></td>
+                    <td>AW-2024-008</td>
+                    <td class="artist-name">楊淑慧<br><small>Yang Shu-Hui</small></td>
+                    <td class="artwork-title">生命之歌<br><small>Song of Life</small></td>
+                    <td class="artwork-concept">陶土承載生命的溫度，造型呼應自然韻律，歌頌生命的堅韌與美好</td>
+                    <td>2024</td>
+                    <td>陶瓷<br><small>Ceramic</small></td>
+                    <td>25×25×35cm</td>
+                    <td class="price">NT$ 95,000</td>
+                    <td><span class="status status-nfs" onclick="changeStatus(this)">NFS</span></td>
+                    <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 純文字版本顯示區域 -->
+    <div id="textVersionContainer" style="display: none; margin-top: 20px;">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px solid #667eea;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">📝 純文字版本 - 請全選並複製</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                使用方法：1. 點擊下方文字區域 2. 按 Ctrl+A 全選 3. 按 Ctrl+C 複製 4. 到Excel按 Ctrl+V 貼上
+            </p>
+            <textarea id="textVersionContent" readonly style="width: 100%; height: 300px; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+            <div style="margin-top: 10px; text-align: center;">
+                <button class="btn btn-primary" onclick="selectAllText()">全選文字</button>
+                <button class="btn btn-success" onclick="hideTextVersion()">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>機密文件 Confidential Document</strong></p>
+        <p>本價格清單僅供受邀賓客私人查閱，請勿外傳或複製</p>
+        <p>所有價格可能調整且以實際庫存為準 | 付款條件：訂金50%，餘款30天內付清</p>
+        <p>© 2024 Gallery. All Rights Reserved.</p>
+    </div>
+
+    <script>
+        let sortDirection = {};
+        let uploadedImages = [];
+
+        // 搜尋功能 - 包含創作理念
+        document.getElementById('searchBox').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#worksTableBody tr');
+            
+            rows.forEach(row => {
+                const artist = row.cells[2].textContent.toLowerCase();
+                const title = row.cells[3].textContent.toLowerCase();
+                const concept = row.cells[4].textContent.toLowerCase();
+                const shouldShow = artist.includes(searchTerm) || title.includes(searchTerm) || concept.includes(searchTerm);
+                row.style.display = shouldShow ? '' : 'none';
+            });
+            updateStats();
+        });
+
+        // 狀態篩選
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const selectedStatus = this.value;
+            const rows = document.querySelectorAll('#worksTableBody tr');
+            
+            rows.forEach(row => {
+                const status = row.cells[9].textContent.trim();
+                const shouldShow = !selectedStatus || status === selectedStatus;
+                row.style.display = shouldShow ? '' : 'none';
+            });
+            updateStats();
+        });
+
+        // 排序功能
+        function sortTable(columnIndex) {
+            const table = document.getElementById('worksTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            const isNumeric = columnIndex === 5 || columnIndex === 8; // 年份和價格
+            
+            sortDirection[columnIndex] = !sortDirection[columnIndex];
+            
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+                
+                if (isNumeric) {
+                    aValue = parseFloat(aValue.replace(/[^\d.-]/g, '')) || 0;
+                    bValue = parseFloat(bValue.replace(/[^\d.-]/g, '')) || 0;
+                    return sortDirection[columnIndex] ? bValue - aValue : aValue - bValue;
+                } else {
+                    return sortDirection[columnIndex] ? 
+                        bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
+                }
+            });
+            
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // 狀態切換
+        function changeStatus(element) {
+            const statuses = ['Available', 'On Hold', 'Sold', 'NFS'];
+            const currentStatus = element.textContent;
+            const currentIndex = statuses.indexOf(currentStatus);
+            const nextIndex = (currentIndex + 1) % statuses.length;
+            const nextStatus = statuses[nextIndex];
+            
+            element.textContent = nextStatus;
+            element.className = `status status-${nextStatus.toLowerCase().replace(' ', '')}`;
+            
+            updateStats();
+        }
+
+        // 更新統計數據
+        function updateStats() {
+            const visibleRows = Array.from(document.querySelectorAll('#worksTableBody tr'))
+                .filter(row => row.style.display !== 'none');
+            
+            const totalWorks = visibleRows.length;
+            const availableWorks = visibleRows.filter(row => 
+                row.cells[9].textContent.trim() === 'Available').length;
+            
+            let totalValue = 0;
+            visibleRows.forEach(row => {
+                const priceText = row.cells[8].textContent.replace(/[^\d]/g, '');
+                const price = parseInt(priceText) || 0;
+                totalValue += price;
+            });
+            
+            const avgPrice = availableWorks > 0 ? totalValue / availableWorks : 0;
+            
+            document.getElementById('totalWorks').textContent = totalWorks;
+            document.getElementById('availableWorks').textContent = availableWorks;
+            document.getElementById('totalValue').textContent = 
+                'NT$ ' + (totalValue / 1000000).toFixed(1) + 'M';
+            document.getElementById('avgPrice').textContent = 
+                'NT$ ' + (avgPrice / 1000).toFixed(0) + 'K';
+        }
+
+        // 新增作品
+        function addNewWork() {
+            const tbody = document.getElementById('worksTableBody');
+            const newRow = tbody.insertRow(0);
+            const workNumber = String(tbody.rows.length).padStart(3, '0');
+            
+            newRow.innerHTML = `
+                <td style="border: 2px solid #667eea;" title="點擊「📷 上傳照片」來新增圖片">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f0f0f0'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%23999' font-size='12'%3E新作品%3C/text%3E%3C/svg%3E" class="artwork-img" alt="作品圖片">
+                </td>
+                <td>AW-2024-${workNumber}</td>
+                <td class="artist-name"><input class="editable" value="新藝術家" placeholder="藝術家姓名"></td>
+                <td class="artwork-title"><input class="editable" value="新作品" placeholder="作品名稱"></td>
+                <td class="artwork-concept"><textarea class="editable" style="width: 100%; min-height: 60px; resize: vertical; font-size: 13px;" placeholder="請描述創作理念、靈感來源或想傳達的概念...">待補充創作理念</textarea></td>
+                <td><input class="editable" value="2024" placeholder="年份"></td>
+                <td><input class="editable" value="待定" placeholder="媒材"></td>
+                <td><input class="editable" value="待定" placeholder="尺寸"></td>
+                <td class="price"><input class="editable" value="NT$ 0" placeholder="價格"></td>
+                <td><span class="status status-available" onclick="changeStatus(this)">Available</span></td>
+                <td><button class="btn btn-primary" onclick="editWork(this)">編輯</button></td>
+            `;
+            
+            updateStats();
+            
+            setTimeout(() => {
+                alert('💡 新作品已建立！\n記得填寫創作理念，並點擊「📷 上傳照片」來新增作品圖片');
+            }, 100);
+        }
+
+        // 編輯功能
+        function editWork(button) {
+            const row = button.closest('tr');
+            const cells = row.querySelectorAll('td:not(:first-child):not(:last-child)');
+            
+            cells.forEach((cell, index) => {
+                if (!cell.querySelector('input') && !cell.querySelector('textarea') && !cell.querySelector('.status')) {
+                    const currentValue = cell.textContent;
+                    
+                    if (index === 3) { 
+                        cell.innerHTML = `<textarea class="editable" style="width: 100%; min-height: 60px; resize: vertical; font-size: 13px;" placeholder="請描述創作理念...">${currentValue}</textarea>`;
+                    } else {
+                        cell.innerHTML = `<input class="editable" value="${currentValue}">`;
+                    }
+                }
+            });
+            
+            const imgCell = row.cells[0];
+            imgCell.style.border = '2px solid #667eea';
+            imgCell.title = '點擊「📷 上傳照片」來更換圖片';
+            
+            button.textContent = '保存';
+            button.onclick = function() { saveWork(this); };
+        }
+
+        // 保存編輯
+        function saveWork(button) {
+            const row = button.closest('tr');
+            const editableElements = row.querySelectorAll('input.editable, textarea.editable');
+            
+            editableElements.forEach(element => {
+                const cell = element.parentElement;
+                cell.textContent = element.value;
+                
+                if (element.tagName === 'TEXTAREA') {
+                    cell.className = 'artwork-concept';
+                }
+            });
+            
+            const imgCell = row.cells[0];
+            imgCell.style.border = '';
+            imgCell.title = '';
+            
+            button.textContent = '編輯';
+            button.onclick = function() { editWork(this); };
+            
+            updateStats();
+        }
+
+        // 匯出菜單切換
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            if (menu) {
+                if (menu.style.display === 'block') {
+                    menu.style.display = 'none';
+                } else {
+                    menu.style.display = 'block';
+                }
+            }
+        }
+
+        // 點擊其他地方關閉菜單
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.export-dropdown');
+            const menu = document.getElementById('exportMenu');
+            if (dropdown && menu && !dropdown.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // 顯示純文字版本
+        function showTextVersion() {
+            try {
+                const tableData = collectTableData();
+                const textContent = createTextVersion(tableData);
+                
+                const container = document.getElementById('textVersionContainer');
+                const textarea = document.getElementById('textVersionContent');
+                
+                if (container && textarea) {
+                    textarea.value = textContent;
+                    container.style.display = 'block';
+                    document.getElementById('exportMenu').style.display = 'none';
+                    container.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showTextInPopup(textContent);
+                }
+            } catch (error) {
+                console.error('顯示文字版本錯誤:', error);
+                const tableData = collectTableData();
+                const simpleText = createSimpleTextVersion(tableData);
+                showTextInPopup(simpleText);
+            }
+        }
+
+        // 彈窗顯示文字版本
+        function showTextInPopup(textContent) {
+            const popup = window.open('', 'textVersion', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            popup.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Available Works List - 純文字版本</title>
+                    <style>
+                        body { font-family: monospace; padding: 20px; line-height: 1.4; }
+                        .header { background: #f0f0f0; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+                        .content { white-space: pre-wrap; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; }
+                        .instructions { background: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 3px; }
+                        button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+                        button:hover { background: #1976D2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>📝 Available Works List - 純文字版本</h2>
+                        <div class="instructions">
+                            <strong>使用方法：</strong><br>
+                            1. 點擊下方「全選並複製」按鈕<br>
+                            2. 或者手動選取文字內容並按 Ctrl+C<br>
+                            3. 到Excel中按 Ctrl+V 貼上（將自動分成9個欄位）
+                        </div>
+                        <button onclick="selectAndCopy()">📋 全選並複製</button>
+                        <button onclick="window.print()">🖨️ 列印</button>
+                        <button onclick="window.close()">❌ 關閉</button>
+                    </div>
+                    <div class="content" id="textContent">${textContent}</div>
+                    <script>
+                        function selectAndCopy() {
+                            const content = document.getElementById('textContent');
+                            const range = document.createRange();
+                            range.selectNode(content);
+                            window.getSelection().removeAllRanges();
+                            window.getSelection().addRange(range);
+                            
+                            try {
+                                const successful = document.execCommand('copy');
+                                if (successful) {
+                                    alert('✅ 內容已複製到剪貼簿！\\n貼到Excel會自動分成欄位');
+                                } else {
+                                    alert('請手動選取文字並按 Ctrl+C 複製');
+                                }
+                            } catch (err) {
+                                alert('請手動選取文字並按 Ctrl+C 複製');
+                            }
+                        }
+                        
+                        window.onload = function() {
+                            const content = document.getElementById('textContent');
+                            const range = document.createRange();
+                            range.selectNode(content);
+                            window.getSelection().removeAllRanges();
+                            window.getSelection().addRange(range);
+                        };
+                    </script>
+                </body>
+                </html>
+            `);
+            popup.document.close();
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+
+        // 收集表格資料
+        function collectTableData() {
+            const rows = document.querySelectorAll('#worksTableBody tr');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+            
+            return visibleRows.map(row => {
+                const cells = row.cells;
+                return {
+                    code: cells[1] ? cells[1].textContent.trim() : '',
+                    artist: cells[2] ? cells[2].textContent.replace(/\s+/g, ' ').trim() : '',
+                    title: cells[3] ? cells[3].textContent.replace(/\s+/g, ' ').trim() : '',
+                    concept: cells[4] ? cells[4].textContent.replace(/\s+/g, ' ').trim() : '',
+                    year: cells[5] ? cells[5].textContent.trim() : '',
+                    medium: cells[6] ? cells[6].textContent.replace(/\s+/g, ' ').trim() : '',
+                    size: cells[7] ? cells[7].textContent.trim() : '',
+                    price: cells[8] ? cells[8].textContent.trim() : '',
+                    status: cells[9] ? cells[9].textContent.trim() : ''
+                };
+            });
+        }
+
+        // 創建純文字版本
+        function createTextVersion(data) {
+            let text = 'Available Works List - 作品清單\n';
+            text += '匯出日期：' + new Date().toLocaleDateString('zh-TW') + '\n\n';
+            
+            text += '編號\t藝術家\t作品名稱\t創作理念\t年份\t媒材\t尺寸\t標價\t狀態\n';
+            text += '─────────────────────────────────────────────────────────\n';
+            
+            data.forEach(row => {
+                text += `${row.code}\t${row.artist}\t${row.title}\t${row.concept}\t${row.year}\t${row.medium}\t${row.size}\t${row.price}\t${row.status}\n`;
+            });
+            
+            text += '\n─────────────────────────────────────────────────────────\n';
+            text += `總計：${data.length} 件作品\n`;
+            text += '本清單僅供參考，實際庫存以畫廊確認為準\n';
+            text += '© 2024 Gallery. All Rights Reserved.';
+            
+            return text;
+        }
+
+        // 創建簡化版文字內容
+        function createSimpleTextVersion(data) {
+            let text = 'Available Works List 作品清單\n';
+            text += '匯出日期：' + new Date().toLocaleDateString('zh-TW') + '\n\n';
+            
+            text += '編號\t藝術家\t作品名稱\t創作理念\t年份\t媒材\t尺寸\t標價\t狀態\n';
+            text += '──────────────────────────────────────────────\n';
+            
+            data.forEach(row => {
+                text += `${row.code}\t${row.artist}\t${row.title}\t${row.concept}\t${row.year}\t${row.medium}\t${row.size}\t${row.price}\t${row.status}\n`;
+            });
+            
+            text += `\n總計：${data.length} 件作品`;
+            return text;
+        }
+
+        // 全選文字內容
+        function selectAllText() {
+            try {
+                const textArea = document.getElementById('textVersionContent');
+                if (textArea) {
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999);
+                    
+                    if (document.execCommand('copy')) {
+                        alert('✅ 文字已複製到剪貼簿！\n請到Excel按 Ctrl+V 貼上');
+                    } else {
+                        alert('已全選文字，請按 Ctrl+C 複製');
+                    }
+                } else {
+                    alert('請使用「顯示純文字版本」功能');
+                }
+            } catch (error) {
+                alert('請使用「顯示純文字版本」功能');
+            }
+        }
+
+        // 隱藏純文字版本
+        function hideTextVersion() {
+            try {
+                const container = document.getElementById('textVersionContainer');
+                if (container) {
+                    container.style.display = 'none';
+                }
+            } catch (error) {
+                console.log('隱藏元素時發生錯誤，但不影響功能');
+            }
+        }
+
+        // PDF輸出功能
+        function exportToPDF() {
+            try {
+                const tableData = collectTableData();
+                createPDFWindow(tableData);
+                document.getElementById('exportMenu').style.display = 'none';
+            } catch (error) {
+                console.error('PDF輸出錯誤:', error);
+                alert('PDF功能暫時無法使用，請嘗試「顯示純文字版本」');
+            }
+        }
+
+        // 創建PDF預覽視窗
+        function createPDFWindow(data) {
+            const pdfWindow = window.open('', 'pdfPreview', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+            if (!pdfWindow) {
+                alert('請允許彈出視窗以開啟PDF預覽');
+                return;
+            }
+            
+            const content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Available Works List - PDF版本</title>
+                    <style>
+                        @media print {
+                            body { margin: 0; font-size: 12px; }
+                            .no-print { display: none; }
+                        }
+                        body { font-family: 'Microsoft JhengHei', Arial, sans-serif; margin: 20px; line-height: 1.4; color: #333; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #667eea; padding-bottom: 20px; }
+                        .header h1 { color: #667eea; margin: 0; font-size: 28px; }
+                        .controls { text-align: center; margin-bottom: 20px; padding: 15px; background: #f0f4ff; border-radius: 8px; }
+                        .btn { padding: 12px 24px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                        .btn-primary { background: #667eea; color: white; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 11px; }
+                        th { background: #667eea; color: white; padding: 12px 8px; text-align: left; font-weight: bold; }
+                        td { padding: 10px 8px; border: 1px solid #ddd; vertical-align: top; }
+                        .concept-cell { max-width: 200px; word-wrap: break-word; font-size: 10px; line-height: 1.3; }
+                        .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="controls no-print">
+                        <button class="btn btn-primary" onclick="window.print()">🖨️ 列印/儲存PDF</button>
+                        <button class="btn btn-primary" onclick="window.close()">❌ 關閉視窗</button>
+                    </div>
+                    <div class="header">
+                        <h1>Available Works List</h1>
+                        <h2>藝廊作品清單</h2>
+                        <p>Gallery Collection - ${new Date().toLocaleDateString('zh-TW')}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>編號</th><th>藝術家</th><th>作品名稱</th><th>創作理念</th><th>年份</th><th>媒材</th><th>尺寸</th><th>標價</th><th>狀態</th></tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td>${row.code}</td>
+                                    <td>${row.artist}</td>
+                                    <td>${row.title}</td>
+                                    <td class="concept-cell">${row.concept}</td>
+                                    <td>${row.year}</td>
+                                    <td>${row.medium}</td>
+                                    <td>${row.size}</td>
+                                    <td style="text-align: right; font-weight: bold;">${row.price}</td>
+                                    <td>${row.status}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                        <p>© 2024 Gallery. All Rights Reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            pdfWindow.document.write(content);
+            pdfWindow.document.close();
+            pdfWindow.focus();
+        }
+
+        // 簡化版的其他匯出功能
+        function exportToExcel() {
+            try {
+                const tableData = collectTableData();
+                const textContent = createSimpleTextVersion(tableData);
+                showTextInPopup(textContent);
+            } catch (error) {
+                alert('功能暫時無法使用，請嘗試「顯示純文字版本」');
+            }
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+
+        function exportToCSV() {
+            try {
+                const tableData = collectTableData();
+                const textContent = createSimpleTextVersion(tableData);
+                showTextInPopup(textContent);
+            } catch (error) {
+                alert('功能暫時無法使用，請嘗試「顯示純文字版本」');
+            }
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+
+        function copyToClipboard() {
+            try {
+                const tableData = collectTableData();
+                const textContent = createSimpleTextVersion(tableData);
+                showTextInPopup(textContent);
+            } catch (error) {
+                alert('功能暫時無法使用，請嘗試「顯示純文字版本」');
+            }
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+
+        function printList() {
+            window.print();
+            document.getElementById('exportMenu').style.display = 'none';
+        }
+
+        // 圖片上傳功能
+        function showImageUploader() {
+            const container = document.getElementById('imageUploadContainer');
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+            setupDragAndDrop();
+        }
+
+        function hideImageUploader() {
+            document.getElementById('imageUploadContainer').style.display = 'none';
+        }
+
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+            
+            dropZone.addEventListener('click', selectImages);
+            
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+        }
+
+        function selectImages() {
+            const imageInput = document.getElementById('imageInput');
+            imageInput.onchange = function(e) {
+                handleFiles(e.target.files);
+            };
+            imageInput.click();
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    if (file.size <= 5 * 1024 * 1024) { // 5MB限制
+                        addImageToCollection(file);
+                    } else {
+                        alert(`檔案 ${file.name} 太大，請選擇小於 5MB 的圖片`);
+                    }
+                } else {
+                    alert(`檔案 ${file.name} 不是圖片格式`);
+                }
+            });
+        }
+
+        function addImageToCollection(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    data: e.target.result,
+                    file: file
+                };
+                
+                uploadedImages.push(imageData);
+                displayUploadedImages();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayUploadedImages() {
+            const container = document.getElementById('uploadedImagesList');
+            
+            container.innerHTML = uploadedImages.map(image => `
+                <div class="uploaded-image-item">
+                    <img src="${image.data}" alt="${image.name}">
+                    <div class="image-name">${image.name}</div>
+                    <div class="image-actions">
+                        <button class="image-btn use" onclick="selectImageForWork(${image.id})">使用</button>
+                        <button class="image-btn delete" onclick="deleteUploadedImage(${image.id})">刪除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectImageForWork(imageId) {
+            const image = uploadedImages.find(img => img.id === imageId);
+            if (!image) return;
+
+            const editingRow = document.querySelector('tr:has(input.editable)') || 
+                              document.querySelector('#worksTableBody tr:first-child');
+            
+            if (editingRow) {
+                const imgCell = editingRow.cells[0];
+                const img = imgCell.querySelector('img');
+                if (img) {
+                    img.src = image.data;
+                    img.alt = image.name;
+                    img.style.width = '60px';
+                    img.style.height = '60px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '5px';
+                }
+                alert(`✅ 圖片已套用到作品！`);
+                hideImageUploader();
+            } else {
+                alert('請先選擇要套用圖片的作品，或新增一個作品');
+            }
+        }
+
+        function deleteUploadedImage(imageId) {
+            if (confirm('確定要刪除這張圖片嗎？')) {
+                uploadedImages = uploadedImages.filter(img => img.id !== imageId);
+                displayUploadedImages();
+            }
+        }
+
+        function clearUploadedImages() {
+            if (confirm('確定要清除所有圖片嗎？')) {
+                uploadedImages = [];
+                displayUploadedImages();
+            }
+        }
+
+        // 初始化統計
+        updateStats();
+    </script>
+</body>
+</html>
