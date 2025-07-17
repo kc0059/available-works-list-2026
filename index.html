@@ -517,32 +517,12 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s ease;
+            text-transform: none;
+            letter-spacing: normal;
         }
 
         .print-btn:hover {
             background: #218838;
-        }
-
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            
-            .print-content, 
-            .print-content * {
-                visibility: visible;
-            }
-            
-            .print-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            
-            .no-print {
-                display: none !important;
-            }
         }
 
         .artwork-card {
@@ -891,6 +871,26 @@
                 font-size: 16px;
             }
 
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100%);
+            }
+
+            .notification.show {
+                transform: translateY(0);
+            }
+
+            .auth-container {
+                margin: 20px auto;
+                padding: 1rem;
+            }
+
             .view-controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -914,22 +914,6 @@
             .artwork-list-image {
                 width: 60px;
                 height: 60px;
-            }
-
-            .notification {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                transform: translateY(-100%);
-            }
-
-            .notification.show {
-                transform: translateY(0);
-            }
-
-            .auth-container {
-                margin: 20px auto;
-                padding: 1rem;
             }
         }
 
@@ -1214,10 +1198,10 @@
             <div class="view-controls">
                 <h2>作品庫 / Artwork Gallery</h2>
                 <div class="view-buttons">
-                    <button class="view-btn active" onclick="switchView('grid')" title="磚形顯示 / Grid View">
+                    <button class="view-btn active" id="gridViewBtn" onclick="switchView('grid')" title="磚形顯示 / Grid View">
                         📱
                     </button>
-                    <button class="view-btn" onclick="switchView('list')" title="列表顯示 / List View">
+                    <button class="view-btn" id="listViewBtn" onclick="switchView('list')" title="列表顯示 / List View">
                         📋
                     </button>
                     <button class="print-btn" onclick="printArtworks()">
@@ -1363,14 +1347,13 @@
             'exhibition': '展覽中'
         };
 
-        // 用戶帳戶系統 (使用 localStorage 模擬)
+        // 用戶帳戶系統
         class UserManager {
             static generateUserId() {
                 return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
 
             static hashPassword(password) {
-                // 簡單的密碼哈希 (實際應用中應使用更安全的方法)
                 let hash = 0;
                 for (let i = 0; i < password.length; i++) {
                     const char = password.charCodeAt(i);
@@ -1419,7 +1402,6 @@
                     throw new Error('密碼錯誤 / Incorrect password');
                 }
 
-                // 設置當前用戶
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 return user;
             }
@@ -1434,7 +1416,7 @@
             }
         }
 
-        // 雲端存儲模擬 (使用 localStorage)
+        // 雲端存儲模擬
         class CloudStorage {
             static saveUserData(userId, artworks) {
                 const key = `artworks_${userId}`;
@@ -1517,21 +1499,15 @@
                 const user = UserManager.login(email, password);
                 currentUser = user;
                 
-                // 載入用戶資料
                 artworks = CloudStorage.loadUserData(user.id);
                 
-                // 切換到主應用
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 
-                // 更新用戶界面
                 document.getElementById('userName').textContent = user.name;
                 document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
                 
-                // 啟動自動存檔
                 startAutoSave();
-                
-                // 更新儀表板
                 updateDashboard();
                 
                 showNotification('登入成功！ / Login successful!', 'success');
@@ -1551,7 +1527,6 @@
                 
                 showNotification('註冊成功！請登入 / Registration successful! Please login', 'success');
                 
-                // 切換到登入頁面
                 switchAuthTab('login');
                 
             } catch (error) {
@@ -1567,17 +1542,14 @@
                 currentUser = null;
                 artworks = [];
                 
-                // 停止自動存檔
                 if (autoSaveInterval) {
                     clearInterval(autoSaveInterval);
                     autoSaveInterval = null;
                 }
                 
-                // 切換到登入頁面
                 document.getElementById('authContainer').style.display = 'block';
                 document.getElementById('mainApp').style.display = 'none';
                 
-                // 重置表單
                 document.getElementById('loginForm').reset();
                 document.getElementById('registerForm').reset();
                 
@@ -1595,7 +1567,7 @@
                 if (currentUser && artworks.length > 0) {
                     CloudStorage.autoSave(currentUser.id, artworks);
                 }
-            }, 30000); // 每30秒自動存檔
+            }, 30000);
         }
 
         function saveData() {
@@ -1622,6 +1594,139 @@
             } else if (tabName === 'dashboard') {
                 updateDashboard();
             }
+        }
+
+        // 視圖切換功能
+        function switchView(viewType) {
+            currentView = viewType;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (viewType === 'grid') {
+                document.getElementById('gridViewBtn').classList.add('active');
+            } else {
+                document.getElementById('listViewBtn').classList.add('active');
+            }
+            
+            // 切換視圖
+            const grid = document.getElementById('artworkGrid');
+            const list = document.getElementById('artworkList');
+            
+            if (viewType === 'grid') {
+                grid.style.display = 'grid';
+                list.classList.remove('active');
+            } else {
+                grid.style.display = 'none';
+                list.classList.add('active');
+            }
+            
+            // 重新顯示作品
+            applyFilters();
+        }
+
+        // 列印功能
+        function printArtworks() {
+            console.log('Print function called');
+            
+            // 獲取當前顯示的作品
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            let filteredArtworks = artworks.filter(artwork => {
+                const matchesSearch = !searchTerm || 
+                    artwork.title.toLowerCase().includes(searchTerm) ||
+                    artwork.artist.toLowerCase().includes(searchTerm) ||
+                    artwork.number.toLowerCase().includes(searchTerm);
+                    
+                const matchesStatus = !statusFilter || artwork.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filteredArtworks.length === 0) {
+                showNotification('沒有作品可以列印 / No artworks to print', 'info');
+                return;
+            }
+
+            // 創建列印內容
+            let printContent = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>藝術作品清單 / Artwork List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; text-align: center; margin-bottom: 10px; }
+                        .header-info { text-align: center; margin-bottom: 20px; color: #666; font-size: 14px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .status-available { color: #28a745; }
+                        .status-sold { color: #dc3545; }
+                        .status-on-hold { color: #ffc107; }
+                        .status-exhibition { color: #17a2b8; }
+                        .artwork-image { width: 60px; height: 60px; object-fit: cover; }
+                        @page { size: A4; margin: 1cm; }
+                    </style>
+                </head>
+                <body>
+                    <h1>藝術作品清單 / Artwork Inventory</h1>
+                    <div class="header-info">
+                        <p>用戶 / User: ${currentUser.name} | 列印日期 / Print Date: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}</p>
+                        <p>共 ${filteredArtworks.length} 件作品 / Total ${filteredArtworks.length} artworks</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>圖片</th>
+                                <th>編號</th>
+                                <th>作品名稱</th>
+                                <th>藝術家</th>
+                                <th>年份</th>
+                                <th>尺寸</th>
+                                <th>媒材</th>
+                                <th>標價</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            filteredArtworks.forEach(artwork => {
+                printContent += `
+                    <tr>
+                        <td>${artwork.image ? `<img src="${artwork.image}" class="artwork-image">` : '-'}</td>
+                        <td>${artwork.number || ''}</td>
+                        <td>${artwork.title || ''}</td>
+                        <td>${artwork.artist || ''}</td>
+                        <td>${artwork.year || ''}</td>
+                        <td>${artwork.dimensions || ''}</td>
+                        <td>${artwork.medium || ''}</td>
+                        <td>NT$${artwork.price ? artwork.price.toLocaleString() : '0'}</td>
+                        <td class="status-${artwork.status}">${statusTranslations[artwork.status] || artwork.status}</td>
+                    </tr>
+                `;
+            });
+
+            printContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            // 開啟新視窗並列印
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                showNotification('列印視窗已開啟 / Print window opened');
+            }, 500);
         }
 
         // 圖片上傳處理
@@ -1789,165 +1894,6 @@
             }
         }
 
-        // 視圖切換功能
-        function switchView(viewType) {
-            currentView = viewType;
-            
-            // 更新按鈕狀態
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // 切換視圖
-            const grid = document.getElementById('artworkGrid');
-            const list = document.getElementById('artworkList');
-            
-            if (viewType === 'grid') {
-                grid.style.display = 'grid';
-                list.classList.remove('active');
-            } else {
-                grid.style.display = 'none';
-                list.classList.add('active');
-            }
-            
-            // 重新載入當前顯示的作品
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
-            
-            let filteredArtworks = artworks.filter(artwork => {
-                const matchesSearch = !searchTerm || 
-                    artwork.title.toLowerCase().includes(searchTerm) ||
-                    artwork.artist.toLowerCase().includes(searchTerm) ||
-                    artwork.number.toLowerCase().includes(searchTerm);
-                    
-                const matchesStatus = !statusFilter || artwork.status === statusFilter;
-                
-                return matchesSearch && matchesStatus;
-            });
-            
-            // 排序
-            filteredArtworks.sort((a, b) => {
-                switch (sortBy) {
-                    case 'number':
-                        return a.number.localeCompare(b.number);
-                    case 'title':
-                        return a.title.localeCompare(b.title);
-                    case 'artist':
-                        return a.artist.localeCompare(b.artist);
-                    case 'year':
-                        return (b.year || 0) - (a.year || 0);
-                    case 'price':
-                        return (b.price || 0) - (a.price || 0);
-                    default:
-                        return 0;
-                }
-            });
-            
-            displayArtworks(filteredArtworks);
-        }
-
-        // 列印功能
-        function printArtworks() {
-            // 獲取當前顯示的作品
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            
-            let filteredArtworks = artworks.filter(artwork => {
-                const matchesSearch = !searchTerm || 
-                    artwork.title.toLowerCase().includes(searchTerm) ||
-                    artwork.artist.toLowerCase().includes(searchTerm) ||
-                    artwork.number.toLowerCase().includes(searchTerm);
-                    
-                const matchesStatus = !statusFilter || artwork.status === statusFilter;
-                
-                return matchesSearch && matchesStatus;
-            });
-
-            if (filteredArtworks.length === 0) {
-                showNotification('沒有作品可以列印 / No artworks to print', 'info');
-                return;
-            }
-
-            // 創建列印內容
-            let printContent = `
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>藝術作品清單 / Artwork List</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        h1 { color: #333; text-align: center; margin-bottom: 10px; }
-                        .header-info { text-align: center; margin-bottom: 20px; color: #666; font-size: 14px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-                        th { background-color: #f2f2f2; font-weight: bold; }
-                        .status-available { color: #28a745; }
-                        .status-sold { color: #dc3545; }
-                        .status-on-hold { color: #ffc107; }
-                        .status-exhibition { color: #17a2b8; }
-                        .artwork-image { width: 60px; height: 60px; object-fit: cover; }
-                        @page { size: A4; margin: 1cm; }
-                    </style>
-                </head>
-                <body>
-                    <h1>藝術作品清單 / Artwork Inventory</h1>
-                    <div class="header-info">
-                        <p>用戶 / User: ${currentUser.name} | 列印日期 / Print Date: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}</p>
-                        <p>共 ${filteredArtworks.length} 件作品 / Total ${filteredArtworks.length} artworks</p>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>圖片</th>
-                                <th>編號</th>
-                                <th>作品名稱</th>
-                                <th>藝術家</th>
-                                <th>年份</th>
-                                <th>尺寸</th>
-                                <th>媒材</th>
-                                <th>標價</th>
-                                <th>狀態</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            filteredArtworks.forEach(artwork => {
-                printContent += `
-                    <tr>
-                        <td>${artwork.image ? `<img src="${artwork.image}" class="artwork-image">` : '-'}</td>
-                        <td>${artwork.number || ''}</td>
-                        <td>${artwork.title || ''}</td>
-                        <td>${artwork.artist || ''}</td>
-                        <td>${artwork.year || ''}</td>
-                        <td>${artwork.dimensions || ''}</td>
-                        <td>${mediumTranslations[artwork.medium] || artwork.medium || ''}</td>
-                        <td>NT${artwork.price ? artwork.price.toLocaleString() : '0'}</td>
-                        <td class="status-${artwork.status}">${statusTranslations[artwork.status] || artwork.status}</td>
-                    </tr>
-                `;
-            });
-
-            printContent += `
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
-
-            // 開啟新視窗並列印
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            setTimeout(() => {
-                printWindow.print();
-                showNotification('列印視窗已開啟 / Print window opened');
-            }, 500);
-        }
-
         // 作品庫載入
         function loadGallery() {
             displayArtworks(artworks);
@@ -1987,7 +1933,7 @@
                         </div>
                         ${artwork.concept ? `<div class="artwork-details" style="font-style: italic; color: #555; margin-top: 0.5rem;">理念 / Concept: ${artwork.concept.substring(0, 80)}${artwork.concept.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="artwork-details">
-                            ${artwork.price > 0 ? `NT${artwork.price.toLocaleString()}` : '未定價 / Price not set'}
+                            ${artwork.price > 0 ? `NT$${artwork.price.toLocaleString()}` : '未定價 / Price not set'}
                             <span class="status-badge status-${artwork.status}">${statusTranslations[artwork.status]}</span>
                         </div>
                         <div class="artwork-actions">
@@ -2021,7 +1967,7 @@
                             <div class="artwork-list-subtitle">${artwork.medium || '未指定媒材'}</div>
                         </div>
                         <div class="artwork-list-detail">
-                            <div class="artwork-list-title">${artwork.price > 0 ? `NT${artwork.price.toLocaleString()}` : '未定價'}</div>
+                            <div class="artwork-list-title">${artwork.price > 0 ? `NT$${artwork.price.toLocaleString()}` : '未定價'}</div>
                             <div class="artwork-list-subtitle">
                                 <span class="status-badge status-${artwork.status}">${statusTranslations[artwork.status]}</span>
                             </div>
@@ -2127,7 +2073,7 @@
             dropdown.classList.toggle('show');
         }
 
-        // Excel匯出功能 (.xlsx格式，包含圖片)
+        // Excel匯出功能
         function exportToExcel() {
             document.getElementById('exportDropdown').classList.remove('show');
             
@@ -2139,10 +2085,8 @@
             try {
                 showLoading();
                 
-                // 創建新的工作簿
                 const wb = XLSX.utils.book_new();
                 
-                // 準備基本資料
                 const data = artworks.map(artwork => ({
                     '編號': artwork.number || '',
                     '作品名稱': artwork.title || '',
@@ -2157,29 +2101,17 @@
                     '圖片': artwork.image ? '有圖片' : '無圖片'
                 }));
                 
-                // 創建基本資料工作表
                 const ws = XLSX.utils.json_to_sheet(data);
                 
-                // 設定欄寬
                 const colWidths = [
-                    { wch: 12 }, // 編號
-                    { wch: 25 }, // 作品名稱
-                    { wch: 20 }, // 藝術家
-                    { wch: 8 },  // 年份
-                    { wch: 15 }, // 尺寸
-                    { wch: 15 }, // 媒材
-                    { wch: 15 }, // 標價
-                    { wch: 12 }, // 狀態
-                    { wch: 40 }, // 創作理念
-                    { wch: 15 }, // 新增日期
-                    { wch: 10 }  // 圖片
+                    { wch: 12 }, { wch: 25 }, { wch: 20 }, { wch: 8 },
+                    { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
+                    { wch: 40 }, { wch: 15 }, { wch: 10 }
                 ];
                 ws['!cols'] = colWidths;
                 
-                // 添加工作表到工作簿
                 XLSX.utils.book_append_sheet(wb, ws, '作品清單');
                 
-                // 創建圖片資料工作表
                 const imageData = artworks
                     .filter(artwork => artwork.image)
                     .map(artwork => ({
@@ -2191,14 +2123,11 @@
                 if (imageData.length > 0) {
                     const imageWs = XLSX.utils.json_to_sheet(imageData);
                     imageWs['!cols'] = [
-                        { wch: 12 }, // 編號
-                        { wch: 25 }, // 作品名稱
-                        { wch: 50 }  // 圖片資料
+                        { wch: 12 }, { wch: 25 }, { wch: 50 }
                     ];
                     XLSX.utils.book_append_sheet(wb, imageWs, '圖片資料');
                 }
                 
-                // 創建統計資料工作表
                 const statsData = [
                     { '統計項目': '總作品數', '數量': artworks.length },
                     { '統計項目': '可售作品', '數量': artworks.filter(a => a.status === 'available').length },
@@ -2213,7 +2142,6 @@
                 statsWs['!cols'] = [{ wch: 20 }, { wch: 20 }];
                 XLSX.utils.book_append_sheet(wb, statsWs, '統計');
                 
-                // 匯出檔案
                 const fileName = `artwork-inventory-${currentUser.name}-${new Date().toISOString().split('T')[0]}.xlsx`;
                 XLSX.writeFile(wb, fileName);
                 
@@ -2270,6 +2198,7 @@
                                 <th>藝術家</th>
                                 <th>年份</th>
                                 <th>尺寸</th>
+                                <th>媒材</th>
                                 <th>標價</th>
                                 <th>狀態</th>
                                 <th>圖片</th>
@@ -2286,6 +2215,7 @@
                         <td>${artwork.artist || ''}</td>
                         <td>${artwork.year || ''}</td>
                         <td>${artwork.dimensions || ''}</td>
+                        <td>${artwork.medium || ''}</td>
                         <td>NT$${artwork.price ? artwork.price.toLocaleString() : '0'}</td>
                         <td class="status-${artwork.status}">${statusTranslations[artwork.status] || artwork.status}</td>
                         <td>${artwork.image ? '✓' : '✗'}</td>
@@ -2333,26 +2263,19 @@
 
         // 初始化應用程式
         function initApp() {
-            // 檢查是否有已登入的用戶
             currentUser = UserManager.getCurrentUser();
             
             if (currentUser) {
-                // 如果已登入，顯示主應用
                 artworks = CloudStorage.loadUserData(currentUser.id);
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 
-                // 更新用戶界面
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
                 
-                // 啟動自動存檔
                 startAutoSave();
-                
-                // 更新儀表板
                 updateDashboard();
             } else {
-                // 如果未登入，顯示登入頁面
                 document.getElementById('authContainer').style.display = 'block';
                 document.getElementById('mainApp').style.display = 'none';
             }
@@ -2402,7 +2325,6 @@
 
         // 點擊外部關閉下拉選單和模態視窗
         document.addEventListener('click', function(event) {
-            // 處理下拉選單
             const dropdown = document.getElementById('exportDropdown');
             const button = event.target.closest('.btn-dropdown');
             
@@ -2410,7 +2332,6 @@
                 dropdown.classList.remove('show');
             }
             
-            // 處理模態視窗
             const modal = document.getElementById('editModal');
             if (event.target === modal) {
                 closeEditModal();
