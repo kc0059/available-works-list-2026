@@ -3,1015 +3,2033 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>藝術作品管理系統</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & Babel -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- SheetJS for Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- Firebase (optional - uncomment when needed) -->
-    <!-- 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    -->
-    
+    <title>藝術作品管理系統 / Artwork Management System</title>
     <style>
-        /* Custom styles for dark mode */
-        .dark {
-            background-color: #111827;
-            color: #f3f4f6;
-        }
-        
-        /* Print styles */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printContent, #printContent * {
-                visibility: visible;
-            }
-            #printContent {
-                position: absolute;
-                left: 0;
-                top: 0;
-            }
-        }
-        
-        /* Smooth transitions */
         * {
-            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fafafa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h2 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .auth-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sync-indicator.show {
+            opacity: 1;
+        }
+
+        .sync-indicator.syncing {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .sync-indicator.error {
+            background: #dc3545;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-right: 1px solid #eee;
+        }
+
+        .nav-tab:last-child {
+            border-right: none;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row-triple {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .image-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .image-upload.drag-over {
+            border-color: #667eea;
+            background: #e8ecff;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-group {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 250px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item:focus {
+            outline: none;
+            background-color: #e9ecef;
+        }
+
+        .btn-dropdown {
+            position: relative;
+            padding-right: 2.5rem;
+        }
+
+        .btn-dropdown::after {
+            content: '▼';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: end;
+        }
+
+        .artwork-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .artwork-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .artwork-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .artwork-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .artwork-info {
+            padding: 1.5rem;
+        }
+
+        .artwork-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .artwork-artist {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .artwork-details {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 1rem;
+        }
+
+        .artwork-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .artwork-actions .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-sold {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-on-hold {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-exhibition {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1002;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 1.5rem 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+                line-height: 1.2;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+                margin-bottom: 1rem;
+            }
+
+            .nav-tab {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-tab:last-child {
+                border-bottom: none;
+            }
+
+            .tab-content {
+                padding: 1rem;
+            }
+
+            .form-row, .form-row-triple {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .search-filters {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .artwork-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                margin: 10px auto;
+                padding: 1rem;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                margin-bottom: 1rem;
+            }
+
+            .modal-title {
+                font-size: 1.2rem;
+            }
+
+            .artwork-actions {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+
+            .artwork-actions .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                width: 100%;
+            }
+
+            .btn-group {
+                width: 100%;
+                margin-bottom: 0.8rem;
+            }
+
+            .btn-dropdown {
+                width: 100%;
+                margin-bottom: 0;
+            }
+
+            .dropdown-menu {
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 6px;
+            }
+
+            .dropdown-item {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .form-group .btn {
+                margin-bottom: 0.5rem;
+                width: 100%;
+            }
+
+            .image-upload {
+                padding: 1rem;
+            }
+
+            input, select, textarea {
+                font-size: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100%);
+            }
+
+            .notification.show {
+                transform: translateY(0);
+            }
+
+            .auth-container {
+                margin: 20px auto;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 1rem 0.5rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .tab-content {
+                padding: 0.8rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .stat-card {
+                padding: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1.3rem;
+            }
+
+            .artwork-info {
+                padding: 1rem;
+            }
+
+            .artwork-title {
+                font-size: 1.1rem;
+            }
+
+            .form-row {
+                gap: 0.5rem;
+            }
+
+            .modal-content {
+                margin: 5px auto;
+                padding: 0.8rem;
+                width: 98%;
+            }
+
+            .dropdown-item {
+                padding: 0.8rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 觸控優化 */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 44px;
+            }
+
+            .nav-tab {
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .dropdown-item {
+                min-height: 44px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .artwork-actions .btn {
+                min-height: 40px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect, Fragment } = React;
+    <!-- 載入指示器 -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 同步指示器 -->
+    <div class="sync-indicator" id="syncIndicator">已同步 / Synced</div>
+
+    <!-- 登入頁面 -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-header">
+            <h2>藝術作品管理系統</h2>
+            <p>Artwork Management System</p>
+        </div>
         
-        // Icon components
-        const LucideIcon = ({ icon, size = 24, className = "" }) => {
-            useEffect(() => {
-                lucide.createIcons();
-            }, []);
-            return <i data-lucide={icon} className={className} style={{ width: size, height: size }}></i>;
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchAuthTab('login')">登入 / Login</button>
+            <button class="auth-tab" onclick="switchAuthTab('register')">註冊 / Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="loginEmail">電子郵件 / Email</label>
+                <input type="email" id="loginEmail" required placeholder="請輸入您的電子郵件">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密碼 / Password</label>
+                <input type="password" id="loginPassword" required placeholder="請輸入您的密碼">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">登入 / Login</button>
+            </div>
+        </form>
+
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="registerName">姓名 / Name</label>
+                <input type="text" id="registerName" required placeholder="請輸入您的姓名">
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">電子郵件 / Email</label>
+                <input type="email" id="registerEmail" required placeholder="請輸入您的電子郵件">
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">密碼 / Password</label>
+                <input type="password" id="registerPassword" required minlength="6" placeholder="密碼至少6個字符">
+            </div>
+            <div class="form-group">
+                <label for="registerConfirmPassword">確認密碼 / Confirm Password</label>
+                <input type="password" id="registerConfirmPassword" required minlength="6" placeholder="請再次輸入密碼">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">註冊 / Register</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 主應用 -->
+    <div id="mainApp" class="container" style="display: none;">
+        <div class="header">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="logout()">登出 / Logout</button>
+            </div>
+            <h1>藝術作品管理系統 / Artwork Management System</h1>
+            <p>專業的藝術作品庫存管理系統 / Professional Artwork Inventory Management</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">儀表板 / Dashboard</button>
+            <button class="nav-tab" onclick="showTab('add-artwork')">新增作品 / Add Artwork</button>
+            <button class="nav-tab" onclick="showTab('gallery')">作品庫 / Gallery</button>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalArtworks">0</div>
+                    <div class="stat-label">總作品數 / Total Artworks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="availableArtworks">0</div>
+                    <div class="stat-label">可售作品 / Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="soldArtworks">0</div>
+                    <div class="stat-label">已售作品 / Sold</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalValue">$0</div>
+                    <div class="stat-label">總價值 / Total Value</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="btn-group">
+                    <button class="btn btn-success btn-dropdown" onclick="toggleExportDropdown()">
+                        📤 匯出資料 / Export Data
+                    </button>
+                    <div class="dropdown-menu" id="exportDropdown">
+                        <button class="dropdown-item" onclick="exportToExcel()">
+                            📊 Excel (.xlsx) 格式<br>
+                            <small style="color: #666;">包含圖片的完整Excel工作表 / Complete Excel workbook with images</small>
+                        </button>
+                        <button class="dropdown-item" onclick="exportToPDF()">
+                            📋 PDF 格式<br>
+                            <small style="color: #666;">適合列印與展示 / For printing & display</small>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清除所有資料 / Clear All Data</button>
+            </div>
+        </div>
+
+        <div id="add-artwork" class="tab-content">
+            <h2>新增藝術作品 / Add New Artwork</h2>
+            <form id="artworkForm">
+                <div class="form-group">
+                    <label for="artworkImage">作品圖片 / Artwork Image</label>
+                    <div class="image-upload" id="imageUpload">
+                        <p>點擊選擇或拖拽圖片到此處 / Click to select or drag image here</p>
+                        <input type="file" id="artworkImage" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="artworkNumber">編號 / Number *</label>
+                        <input type="text" id="artworkNumber" required placeholder="例：AW001">
+                    </div>
+                    <div class="form-group">
+                        <label for="artworkTitle">作品名稱 / Title *</label>
+                        <input type="text" id="artworkTitle" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="artistName">藝術家 / Artist *</label>
+                        <input type="text" id="artistName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="yearCreated">年份 / Year</label>
+                        <input type="number" id="yearCreated" min="1000" max="2025">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dimensions">尺寸 / Dimensions</label>
+                        <input type="text" id="dimensions" placeholder="例：50x70cm">
+                    </div>
+                    <div class="form-group">
+                        <label for="price">標價 / Price (NT$)</label>
+                        <input type="number" id="price" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">狀態 / Status</label>
+                    <select id="status">
+                        <option value="available">可售 / Available</option>
+                        <option value="sold">已售 / Sold</option>
+                        <option value="on-hold">保留中 / On Hold</option>
+                        <option value="exhibition">展覽中 / In Exhibition</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="concept">創作理念 / Creative Concept</label>
+                    <textarea id="concept" rows="4" placeholder="請描述作品的創作理念與靈感來源..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">新增作品 / Add Artwork</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">重設表單 / Reset Form</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="gallery" class="tab-content">
+            <h2>作品庫 / Artwork Gallery</h2>
+            
+            <div class="search-filters">
+                <div class="form-group">
+                    <input type="text" id="searchInput" placeholder="搜尋作品名稱、藝術家或編號... / Search by title, artist or number...">
+                </div>
+                <div class="form-group">
+                    <select id="statusFilter">
+                        <option value="">所有狀態 / All Status</option>
+                        <option value="available">可售 / Available</option>
+                        <option value="sold">已售 / Sold</option>
+                        <option value="on-hold">保留中 / On Hold</option>
+                        <option value="exhibition">展覽中 / In Exhibition</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="sortBy">
+                        <option value="number">依編號排序 / Sort by Number</option>
+                        <option value="title">依作品名稱排序 / Sort by Title</option>
+                        <option value="artist">依藝術家排序 / Sort by Artist</option>
+                        <option value="year">依年份排序 / Sort by Year</option>
+                        <option value="price">依價格排序 / Sort by Price</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="applyFilters()">套用篩選 / Apply Filters</button>
+                </div>
+            </div>
+
+            <div class="artwork-grid" id="artworkGrid">
+                <!-- 作品卡片將在這裡顯示 / Artwork cards will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 編輯模態視窗 / Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">編輯作品 / Edit Artwork</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label for="editImage">作品圖片 / Artwork Image</label>
+                    <div class="image-upload" id="editImageUpload">
+                        <p>點擊選擇或拖拽圖片到此處 / Click to select or drag image here</p>
+                        <input type="file" id="editImage" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="image-preview" id="editImagePreview"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editNumber">編號 / Number *</label>
+                        <input type="text" id="editNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTitle">作品名稱 / Title *</label>
+                        <input type="text" id="editTitle" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editArtist">藝術家 / Artist *</label>
+                        <input type="text" id="editArtist" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editYear">年份 / Year</label>
+                        <input type="number" id="editYear" min="1000" max="2025">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editDimensions">尺寸 / Dimensions</label>
+                        <input type="text" id="editDimensions">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrice">標價 / Price (NT$)</label>
+                        <input type="number" id="editPrice" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editStatus">狀態 / Status</label>
+                    <select id="editStatus">
+                        <option value="available">可售 / Available</option>
+                        <option value="sold">已售 / Sold</option>
+                        <option value="on-hold">保留中 / On Hold</option>
+                        <option value="exhibition">展覽中 / In Exhibition</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editConcept">創作理念 / Creative Concept</label>
+                    <textarea id="editConcept" rows="4" placeholder="請描述作品的創作理念與靈感來源..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">更新作品 / Update Artwork</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消 / Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        // 應用程式狀態
+        let artworks = [];
+        let currentUser = null;
+        let currentEditId = null;
+        let autoSaveInterval = null;
+
+        // 狀態翻譯
+        const statusTranslations = {
+            'available': '可售',
+            'sold': '已售',
+            'on-hold': '保留中',
+            'exhibition': '展覽中'
         };
 
-        const ArtworkListManager = () => {
-            const [artworks, setArtworks] = useState(() => {
-                // 從 localStorage 載入資料
-                const saved = localStorage.getItem('artworks');
-                return saved ? JSON.parse(saved) : [{
-                    id: 1,
-                    photo: null,
-                    number: 'AW001',
-                    artist: '王小明',
-                    title: '晨曦',
-                    concept: '描繪清晨第一道光線穿透雲層的美麗時刻',
-                    medium: '油彩、畫布',
-                    size: '60 x 80 cm',
-                    price: 'NT$ 45,000',
-                    status: 'Available'
-                }];
+        // 用戶帳戶系統 (使用 localStorage 模擬)
+        class UserManager {
+            static generateUserId() {
+                return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            static hashPassword(password) {
+                // 簡單的密碼哈希 (實際應用中應使用更安全的方法)
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString();
+            }
+
+            static register(name, email, password, confirmPassword) {
+                if (password !== confirmPassword) {
+                    throw new Error('密碼確認不符 / Password confirmation does not match');
+                }
+
+                const users = JSON.parse(localStorage.getItem('users') || '{}');
+                
+                if (users[email]) {
+                    throw new Error('此電子郵件已註冊 / This email is already registered');
+                }
+
+                const userId = this.generateUserId();
+                const hashedPassword = this.hashPassword(password);
+
+                users[email] = {
+                    id: userId,
+                    name: name,
+                    email: email,
+                    password: hashedPassword,
+                    createdAt: new Date().toISOString()
+                };
+
+                localStorage.setItem('users', JSON.stringify(users));
+                return users[email];
+            }
+
+            static login(email, password) {
+                const users = JSON.parse(localStorage.getItem('users') || '{}');
+                const user = users[email];
+
+                if (!user) {
+                    throw new Error('用戶不存在 / User does not exist');
+                }
+
+                const hashedPassword = this.hashPassword(password);
+                if (user.password !== hashedPassword) {
+                    throw new Error('密碼錯誤 / Incorrect password');
+                }
+
+                // 設置當前用戶
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                return user;
+            }
+
+            static getCurrentUser() {
+                const userStr = localStorage.getItem('currentUser');
+                return userStr ? JSON.parse(userStr) : null;
+            }
+
+            static logout() {
+                localStorage.removeItem('currentUser');
+            }
+        }
+
+        // 雲端存儲模擬 (使用 localStorage)
+        class CloudStorage {
+            static saveUserData(userId, artworks) {
+                const key = `artworks_${userId}`;
+                localStorage.setItem(key, JSON.stringify(artworks));
+                this.showSyncStatus('已同步 / Synced', 'success');
+            }
+
+            static loadUserData(userId) {
+                const key = `artworks_${userId}`;
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : [];
+            }
+
+            static showSyncStatus(message, type = 'success') {
+                const indicator = document.getElementById('syncIndicator');
+                indicator.textContent = message;
+                indicator.className = `sync-indicator show ${type}`;
+                
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }
+
+            static autoSave(userId, artworks) {
+                this.showSyncStatus('同步中... / Syncing...', 'syncing');
+                
+                setTimeout(() => {
+                    this.saveUserData(userId, artworks);
+                }, 500);
+            }
+        }
+
+        // 載入和顯示功能
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 認證功能
+        function switchAuthTab(tabName) {
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
             });
             
-            const [editingId, setEditingId] = useState(null);
-            const [formData, setFormData] = useState({});
-            const [showAddForm, setShowAddForm] = useState(false);
-            const [searchTerm, setSearchTerm] = useState('');
-            const [searchField, setSearchField] = useState('all');
-            const [isConnected, setIsConnected] = useState(false);
-            const [syncStatus, setSyncStatus] = useState('');
-            const [fontSize, setFontSize] = useState('normal');
-            const [darkMode, setDarkMode] = useState(false);
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Form').classList.add('active');
+        }
 
-            const statusOptions = ['Available', 'On Hold', 'Sold', 'NFS'];
-            const statusColors = {
-                'Available': darkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800',
-                'On Hold': darkMode ? 'bg-yellow-900 text-yellow-100' : 'bg-yellow-100 text-yellow-800',
-                'Sold': darkMode ? 'bg-red-900 text-red-100' : 'bg-red-100 text-red-800',
-                'NFS': darkMode ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-800'
-            };
+        async function login(email, password) {
+            try {
+                showLoading();
+                
+                const user = UserManager.login(email, password);
+                currentUser = user;
+                
+                // 載入用戶資料
+                artworks = CloudStorage.loadUserData(user.id);
+                
+                // 切換到主應用
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // 更新用戶界面
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                
+                // 啟動自動存檔
+                startAutoSave();
+                
+                // 更新儀表板
+                updateDashboard();
+                
+                showNotification('登入成功！ / Login successful!', 'success');
+                
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
 
-            const fontSizeClasses = {
-                small: 'text-sm',
-                normal: 'text-base',
-                large: 'text-lg',
-                xlarge: 'text-xl'
-            };
+        async function register(name, email, password, confirmPassword) {
+            try {
+                showLoading();
+                
+                const user = UserManager.register(name, email, password, confirmPassword);
+                
+                showNotification('註冊成功！請登入 / Registration successful! Please login', 'success');
+                
+                // 切換到登入頁面
+                switchAuthTab('login');
+                
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
 
-            // 儲存到 localStorage
-            useEffect(() => {
-                localStorage.setItem('artworks', JSON.stringify(artworks));
-            }, [artworks]);
-
-            // 深色模式切換
-            useEffect(() => {
-                if (darkMode) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+        function logout() {
+            if (confirm('確定要登出嗎？ / Are you sure you want to logout?')) {
+                UserManager.logout();
+                currentUser = null;
+                artworks = [];
+                
+                // 停止自動存檔
+                if (autoSaveInterval) {
+                    clearInterval(autoSaveInterval);
+                    autoSaveInterval = null;
                 }
-            }, [darkMode]);
+                
+                // 切換到登入頁面
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('mainApp').style.display = 'none';
+                
+                // 重置表單
+                document.getElementById('loginForm').reset();
+                document.getElementById('registerForm').reset();
+                
+                showNotification('已登出 / Logged out', 'info');
+            }
+        }
 
-            // 搜尋過濾功能
-            const filteredArtworks = artworks.filter(artwork => {
-                if (!searchTerm) return true;
+        // 自動存檔功能
+        function startAutoSave() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            
+            autoSaveInterval = setInterval(() => {
+                if (currentUser && artworks.length > 0) {
+                    CloudStorage.autoSave(currentUser.id, artworks);
+                }
+            }, 30000); // 每30秒自動存檔
+        }
+
+        function saveData() {
+            if (currentUser) {
+                CloudStorage.saveUserData(currentUser.id, artworks);
+            }
+        }
+
+        // 切換分頁
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'gallery') {
+                loadGallery();
+            } else if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        // 圖片上傳處理
+        function setupImageUpload(uploadElement, previewElement, inputElement) {
+            if (!uploadElement || !previewElement || !inputElement) return;
+            
+            uploadElement.addEventListener('click', () => {
+                inputElement.click();
+            });
+            
+            uploadElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadElement.classList.add('drag-over');
+            });
+            
+            uploadElement.addEventListener('dragleave', () => {
+                uploadElement.classList.remove('drag-over');
+            });
+            
+            uploadElement.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadElement.classList.remove('drag-over');
                 
-                const searchLower = searchTerm.toLowerCase();
-                
-                switch (searchField) {
-                    case 'artist':
-                        return artwork.artist.toLowerCase().includes(searchLower);
-                    case 'title':
-                        return artwork.title.toLowerCase().includes(searchLower);
-                    case 'medium':
-                        return artwork.medium.toLowerCase().includes(searchLower);
-                    case 'status':
-                        return artwork.status.toLowerCase().includes(searchLower);
-                    case 'all':
-                    default:
-                        return (
-                            artwork.artist.toLowerCase().includes(searchLower) ||
-                            artwork.title.toLowerCase().includes(searchLower) ||
-                            artwork.medium.toLowerCase().includes(searchLower) ||
-                            artwork.concept.toLowerCase().includes(searchLower) ||
-                            artwork.number.toLowerCase().includes(searchLower)
-                        );
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleImageUpload(files[0], previewElement);
                 }
             });
+            
+            inputElement.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageUpload(e.target.files[0], previewElement);
+                }
+            });
+        }
 
-            // 列印功能
-            const handlePrint = () => {
-                const printContent = `
-                    <html>
-                    <head>
-                        <title>藝術作品清單</title>
-                        <style>
-                            @page { margin: 2cm; }
-                            body { font-family: Arial, sans-serif; }
-                            h1 { text-align: center; color: #333; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                            th { background-color: #f2f2f2; font-weight: bold; }
-                            tr:nth-child(even) { background-color: #f9f9f9; }
-                            .status { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-                            .available { background-color: #d4edda; color: #155724; }
-                            .on-hold { background-color: #fff3cd; color: #856404; }
-                            .sold { background-color: #f8d7da; color: #721c24; }
-                            .nfs { background-color: #e2e3e5; color: #383d41; }
-                            .photo { width: 100px; height: 100px; object-fit: cover; }
-                            @media print { body { -webkit-print-color-adjust: exact; } }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>藝術作品清單</h1>
-                        <p>列印日期：${new Date().toLocaleDateString('zh-TW')}</p>
-                        <p>總計：${filteredArtworks.length} 件作品</p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>照片</th>
-                                    <th>編號</th>
-                                    <th>藝術家</th>
-                                    <th>作品名稱</th>
-                                    <th>創作理念</th>
-                                    <th>媒材</th>
-                                    <th>尺寸</th>
-                                    <th>標價</th>
-                                    <th>狀態</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${filteredArtworks.map(artwork => `
-                                    <tr>
-                                        <td>${artwork.photo ? `<img src="${artwork.photo}" class="photo" />` : '無照片'}</td>
-                                        <td>${artwork.number}</td>
-                                        <td>${artwork.artist}</td>
-                                        <td><strong>${artwork.title}</strong></td>
-                                        <td>${artwork.concept}</td>
-                                        <td>${artwork.medium}</td>
-                                        <td>${artwork.size}</td>
-                                        <td>${artwork.price}</td>
-                                        <td><span class="status ${artwork.status.toLowerCase().replace(' ', '-')}">${artwork.status}</span></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </body>
-                    </html>
-                `;
-
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(printContent);
-                printWindow.document.close();
-                printWindow.onload = () => {
-                    printWindow.print();
-                    printWindow.close();
-                };
+        function handleImageUpload(file, previewElement) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('請選擇有效的圖片檔案 / Please select a valid image file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewElement.innerHTML = `<img src="${e.target.result}" alt="預覽 / Preview">`;
+                previewElement.dataset.imageData = e.target.result;
             };
+            reader.readAsDataURL(file);
+        }
 
-            // 匯出 Excel 功能
-            const exportToExcel = () => {
-                const exportData = artworks.map(({ id, photo, ...rest }) => ({
-                    編號: rest.number,
-                    藝術家: rest.artist,
-                    作品名稱: rest.title,
-                    創作理念: rest.concept,
-                    媒材: rest.medium,
-                    尺寸: rest.size,
-                    標價: rest.price,
-                    狀態: rest.status
-                }));
+        // 表單處理
+        async function handleArtworkSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const number = document.getElementById('artworkNumber').value.trim();
+                const title = document.getElementById('artworkTitle').value.trim();
+                const artist = document.getElementById('artistName').value.trim();
+                
+                if (!number || !title || !artist) {
+                    showNotification('請填寫所有必填欄位 / Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                if (artworks.some(artwork => artwork.number === number)) {
+                    showNotification('此編號已存在 / This number already exists', 'error');
+                    return;
+                }
+                
+                const artwork = {
+                    id: Date.now(),
+                    number: number,
+                    title: title,
+                    artist: artist,
+                    year: document.getElementById('yearCreated').value || null,
+                    dimensions: document.getElementById('dimensions').value.trim(),
+                    price: parseFloat(document.getElementById('price').value) || 0,
+                    status: document.getElementById('status').value,
+                    concept: document.getElementById('concept').value.trim(),
+                    dateAdded: new Date().toISOString(),
+                    image: document.getElementById('imagePreview').dataset.imageData || null
+                };
+                
+                artworks.push(artwork);
+                saveData();
+                
+                showNotification('作品新增成功！ / Artwork added successfully!');
+                resetForm();
+                updateDashboard();
+                
+            } catch (error) {
+                console.error('新增作品錯誤:', error);
+                showNotification('新增作品失敗：' + error.message, 'error');
+            }
+        }
 
-                const ws = XLSX.utils.json_to_sheet(exportData);
+        async function handleEditSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const id = parseInt(document.getElementById('editId').value);
+                const number = document.getElementById('editNumber').value.trim();
+                
+                if (artworks.some(artwork => artwork.number === number && artwork.id !== id)) {
+                    showNotification('此編號已被使用 / This number is already used', 'error');
+                    return;
+                }
+                
+                const artworkIndex = artworks.findIndex(a => a.id === id);
+                if (artworkIndex === -1) return;
+                
+                const imageData = document.getElementById('editImagePreview').dataset.imageData;
+                
+                artworks[artworkIndex] = {
+                    ...artworks[artworkIndex],
+                    number: number,
+                    title: document.getElementById('editTitle').value.trim(),
+                    artist: document.getElementById('editArtist').value.trim(),
+                    year: document.getElementById('editYear').value || null,
+                    dimensions: document.getElementById('editDimensions').value.trim(),
+                    price: parseFloat(document.getElementById('editPrice').value) || 0,
+                    status: document.getElementById('editStatus').value,
+                    concept: document.getElementById('editConcept').value.trim(),
+                    image: imageData || artworks[artworkIndex].image
+                };
+                
+                saveData();
+                
+                showNotification('作品更新成功！ / Artwork updated successfully!');
+                closeEditModal();
+                loadGallery();
+                updateDashboard();
+                
+            } catch (error) {
+                console.error('更新作品錯誤:', error);
+                showNotification('更新作品失敗：' + error.message, 'error');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('artworkForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            delete document.getElementById('imagePreview').dataset.imageData;
+        }
+
+        // 儀表板更新
+        function updateDashboard() {
+            try {
+                const stats = {
+                    total: artworks.length,
+                    available: artworks.filter(a => a.status === 'available').length,
+                    sold: artworks.filter(a => a.status === 'sold').length,
+                    totalValue: artworks.reduce((sum, a) => sum + (a.price || 0), 0)
+                };
+                
+                document.getElementById('totalArtworks').textContent = stats.total;
+                document.getElementById('availableArtworks').textContent = stats.available;
+                document.getElementById('soldArtworks').textContent = stats.sold;
+                document.getElementById('totalValue').textContent = `NT$${stats.totalValue.toLocaleString()}`;
+                
+            } catch (error) {
+                console.error('更新儀表板錯誤:', error);
+            }
+        }
+
+        // 作品庫載入
+        function loadGallery() {
+            displayArtworks(artworks);
+        }
+
+        function displayArtworks(artworksToShow) {
+            const grid = document.getElementById('artworkGrid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            if (artworksToShow.length === 0) {
+                grid.innerHTML = '<p>沒有找到作品。請先新增一些作品！ / No artworks found. Please add some artworks first!</p>';
+                return;
+            }
+            
+            artworksToShow.forEach(artwork => {
+                const card = document.createElement('div');
+                card.className = 'artwork-card';
+                
+                card.innerHTML = `
+                    ${artwork.image ? `<img src="${artwork.image}" alt="${artwork.title}" class="artwork-image">` : '<div class="artwork-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666;">無圖片 / No Image</div>'}
+                    <div class="artwork-info">
+                        <div class="artwork-title">${artwork.title}</div>
+                        <div class="artwork-artist">${artwork.artist}</div>
+                        <div class="artwork-details">
+                            編號 / Number：${artwork.number} ${artwork.year ? `• ${artwork.year}年` : ''}
+                            ${artwork.dimensions ? `• ${artwork.dimensions}` : ''}
+                        </div>
+                        ${artwork.concept ? `<div class="artwork-details" style="font-style: italic; color: #555; margin-top: 0.5rem;">理念 / Concept: ${artwork.concept.substring(0, 80)}${artwork.concept.length > 80 ? '...' : ''}</div>` : ''}
+                        <div class="artwork-details">
+                            ${artwork.price > 0 ? `NT$${artwork.price.toLocaleString()}` : '未定價 / Price not set'}
+                            <span class="status-badge status-${artwork.status}">${statusTranslations[artwork.status]}</span>
+                        </div>
+                        <div class="artwork-actions">
+                            <button class="btn btn-primary" onclick="editArtwork(${artwork.id})">編輯 / Edit</button>
+                            <button class="btn btn-danger" onclick="deleteArtworkConfirm(${artwork.id})">刪除 / Delete</button>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // 篩選功能
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            let filteredArtworks = artworks.filter(artwork => {
+                const matchesSearch = !searchTerm || 
+                    artwork.title.toLowerCase().includes(searchTerm) ||
+                    artwork.artist.toLowerCase().includes(searchTerm) ||
+                    artwork.number.toLowerCase().includes(searchTerm);
+                    
+                const matchesStatus = !statusFilter || artwork.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            // 排序作品
+            filteredArtworks.sort((a, b) => {
+                switch (sortBy) {
+                    case 'number':
+                        return a.number.localeCompare(b.number);
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'artist':
+                        return a.artist.localeCompare(b.artist);
+                    case 'year':
+                        return (b.year || 0) - (a.year || 0);
+                    case 'price':
+                        return (b.price || 0) - (a.price || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            displayArtworks(filteredArtworks);
+        }
+
+        // 編輯功能
+        function editArtwork(id) {
+            const artwork = artworks.find(a => a.id === id);
+            if (!artwork) return;
+            
+            currentEditId = id;
+            
+            document.getElementById('editId').value = id;
+            document.getElementById('editNumber').value = artwork.number || '';
+            document.getElementById('editTitle').value = artwork.title || '';
+            document.getElementById('editArtist').value = artwork.artist || '';
+            document.getElementById('editYear').value = artwork.year || '';
+            document.getElementById('editDimensions').value = artwork.dimensions || '';
+            document.getElementById('editPrice').value = artwork.price || '';
+            document.getElementById('editStatus').value = artwork.status || 'available';
+            document.getElementById('editConcept').value = artwork.concept || '';
+            
+            if (artwork.image) {
+                document.getElementById('editImagePreview').innerHTML = `<img src="${artwork.image}" alt="預覽 / Preview">`;
+                document.getElementById('editImagePreview').dataset.imageData = artwork.image;
+            } else {
+                document.getElementById('editImagePreview').innerHTML = '';
+                delete document.getElementById('editImagePreview').dataset.imageData;
+            }
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editImagePreview').innerHTML = '';
+            delete document.getElementById('editImagePreview').dataset.imageData;
+            currentEditId = null;
+        }
+
+        function deleteArtworkConfirm(id) {
+            if (confirm('確定要刪除這件作品嗎？ / Are you sure you want to delete this artwork?')) {
+                artworks = artworks.filter(a => a.id !== id);
+                saveData();
+                showNotification('作品已刪除 / Artwork deleted');
+                loadGallery();
+                updateDashboard();
+            }
+        }
+
+        // 下拉選單控制
+        function toggleExportDropdown() {
+            const dropdown = document.getElementById('exportDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Excel匯出功能 (.xlsx格式，包含圖片)
+        function exportToExcel() {
+            document.getElementById('exportDropdown').classList.remove('show');
+            
+            if (artworks.length === 0) {
+                showNotification('沒有作品可以匯出 / No artworks to export', 'info');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                // 創建新的工作簿
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "作品清單");
+                
+                // 準備基本資料
+                const data = artworks.map(artwork => ({
+                    '編號': artwork.number || '',
+                    '作品名稱': artwork.title || '',
+                    '藝術家': artwork.artist || '',
+                    '年份': artwork.year || '',
+                    '尺寸': artwork.dimensions || '',
+                    '標價': artwork.price || 0,
+                    '狀態': statusTranslations[artwork.status] || artwork.status,
+                    '創作理念': artwork.concept || '',
+                    '新增日期': artwork.dateAdded ? new Date(artwork.dateAdded).toLocaleDateString('zh-TW') : '',
+                    '圖片': artwork.image ? '有圖片' : '無圖片'
+                }));
+                
+                // 創建基本資料工作表
+                const ws = XLSX.utils.json_to_sheet(data);
                 
                 // 設定欄寬
                 const colWidths = [
-                    { wch: 10 }, // 編號
-                    { wch: 15 }, // 藝術家
-                    { wch: 20 }, // 作品名稱
-                    { wch: 40 }, // 創作理念
-                    { wch: 15 }, // 媒材
+                    { wch: 12 }, // 編號
+                    { wch: 25 }, // 作品名稱
+                    { wch: 20 }, // 藝術家
+                    { wch: 8 },  // 年份
                     { wch: 15 }, // 尺寸
                     { wch: 15 }, // 標價
-                    { wch: 10 }  // 狀態
+                    { wch: 12 }, // 狀態
+                    { wch: 40 }, // 創作理念
+                    { wch: 15 }, // 新增日期
+                    { wch: 10 }  // 圖片
                 ];
                 ws['!cols'] = colWidths;
-
-                XLSX.writeFile(wb, `藝術作品清單_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '')}.xlsx`);
-            };
-
-            // 匯入 Excel/CSV 功能
-            const handleFileImport = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    try {
-                        const bstr = evt.target.result;
-                        const wb = XLSX.read(bstr, { type: 'binary' });
-                        const wsname = wb.SheetNames[0];
-                        const ws = wb.Sheets[wsname];
-                        const data = XLSX.utils.sheet_to_json(ws);
-
-                        const importedArtworks = data.map((row, index) => ({
-                            id: Date.now() + index,
-                            photo: null,
-                            number: row['編號'] || row['number'] || '',
-                            artist: row['藝術家'] || row['artist'] || '',
-                            title: row['作品名稱'] || row['title'] || '',
-                            concept: row['創作理念'] || row['concept'] || '',
-                            medium: row['媒材'] || row['medium'] || '',
-                            size: row['尺寸'] || row['size'] || '',
-                            price: row['標價'] || row['price'] || '',
-                            status: row['狀態'] || row['status'] || 'Available'
-                        }));
-
-                        setArtworks([...artworks, ...importedArtworks]);
-                        alert(`成功匯入 ${importedArtworks.length} 筆作品資料！`);
-                    } catch (error) {
-                        alert('匯入失敗，請確認檔案格式是否正確');
-                        console.error(error);
-                    }
-                };
-                reader.readAsBinaryString(file);
-            };
-
-            const handleImageUpload = (e, id) => {
-                const file = e.target.files[0];
-                if (file) {
-                    // 檢查檔案大小（建議 1MB 以內）
-                    if (file.size > 1024 * 1024) {
-                        if (!confirm('圖片大於 1MB，可能會影響效能。是否繼續？')) {
-                            return;
-                        }
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        if (editingId === id) {
-                            setFormData({ ...formData, photo: reader.result });
-                        } else {
-                            setArtworks(artworks.map(art => 
-                                art.id === id ? { ...art, photo: reader.result } : art
-                            ));
-                        }
-                    };
-                    reader.readAsDataURL(file);
+                
+                // 添加工作表到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '作品清單');
+                
+                // 創建圖片資料工作表
+                const imageData = artworks
+                    .filter(artwork => artwork.image)
+                    .map(artwork => ({
+                        '編號': artwork.number,
+                        '作品名稱': artwork.title,
+                        '圖片資料': artwork.image
+                    }));
+                
+                if (imageData.length > 0) {
+                    const imageWs = XLSX.utils.json_to_sheet(imageData);
+                    imageWs['!cols'] = [
+                        { wch: 12 }, // 編號
+                        { wch: 25 }, // 作品名稱
+                        { wch: 50 }  // 圖片資料
+                    ];
+                    XLSX.utils.book_append_sheet(wb, imageWs, '圖片資料');
                 }
-            };
+                
+                // 創建統計資料工作表
+                const statsData = [
+                    { '統計項目': '總作品數', '數量': artworks.length },
+                    { '統計項目': '可售作品', '數量': artworks.filter(a => a.status === 'available').length },
+                    { '統計項目': '已售作品', '數量': artworks.filter(a => a.status === 'sold').length },
+                    { '統計項目': '保留中作品', '數量': artworks.filter(a => a.status === 'on-hold').length },
+                    { '統計項目': '展覽中作品', '數量': artworks.filter(a => a.status === 'exhibition').length },
+                    { '統計項目': '總價值', '數量': `NT$${artworks.reduce((sum, a) => sum + (a.price || 0), 0).toLocaleString()}` },
+                    { '統計項目': '有圖片作品', '數量': artworks.filter(a => a.image).length }
+                ];
+                
+                const statsWs = XLSX.utils.json_to_sheet(statsData);
+                statsWs['!cols'] = [{ wch: 20 }, { wch: 20 }];
+                XLSX.utils.book_append_sheet(wb, statsWs, '統計');
+                
+                // 匯出檔案
+                const fileName = `artwork-inventory-${currentUser.name}-${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                showNotification('Excel檔案匯出成功！ / Excel file exported successfully!');
+                
+            } catch (error) {
+                console.error('匯出Excel錯誤:', error);
+                showNotification('匯出Excel失敗：' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
 
-            const handleDrop = (e, id) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const event = { target: { files: [file] } };
-                    handleImageUpload(event, id);
-                }
-            };
+        // PDF匯出功能
+        function exportToPDF() {
+            document.getElementById('exportDropdown').classList.remove('show');
+            
+            if (artworks.length === 0) {
+                showNotification('沒有作品可以匯出 / No artworks to export', 'info');
+                return;
+            }
 
-            const handleEdit = (artwork) => {
-                setEditingId(artwork.id);
-                setFormData(artwork);
-            };
-
-            const handleSave = () => {
-                setArtworks(artworks.map(art => 
-                    art.id === editingId ? formData : art
-                ));
-                setEditingId(null);
-                setFormData({});
-            };
-
-            const handleCancel = () => {
-                setEditingId(null);
-                setFormData({});
-                setShowAddForm(false);
-            };
-
-            const handleAdd = () => {
-                const newArtwork = {
-                    id: Date.now(),
-                    photo: null,
-                    number: '',
-                    artist: '',
-                    title: '',
-                    concept: '',
-                    medium: '',
-                    size: '',
-                    price: '',
-                    status: 'Available'
-                };
-                setFormData(newArtwork);
-                setShowAddForm(true);
-            };
-
-            const handleAddSave = () => {
-                setArtworks([...artworks, { ...formData, id: Date.now() }]);
-                setShowAddForm(false);
-                setFormData({});
-            };
-
-            const handleDelete = (id) => {
-                if (window.confirm('確定要刪除這件作品嗎？')) {
-                    setArtworks(artworks.filter(art => art.id !== id));
-                }
-            };
-
-            const renderEditForm = (artwork, isNew = false) => (
-                <tr className={darkMode ? 'bg-gray-800' : 'bg-blue-50'}>
-                    <td colSpan="10" className="p-2 md:p-4">
-                        <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 ${darkMode ? 'bg-gray-900' : 'bg-white'} p-4 md:p-6 rounded-lg shadow-inner`}>
-                            <div className="col-span-1 md:col-span-2">
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>作品照片</label>
-                                <div
-                                    className={`border-2 border-dashed ${darkMode ? 'border-gray-600 hover:border-blue-400' : 'border-gray-300 hover:border-blue-400'} rounded-lg p-4 md:p-8 text-center transition-colors cursor-pointer`}
-                                    onDrop={(e) => handleDrop(e, artwork.id)}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onClick={() => document.getElementById(`upload-${artwork.id}`).click()}
-                                >
-                                    {formData.photo ? (
-                                        <img src={formData.photo} alt="作品" className="max-h-32 md:max-h-48 mx-auto" />
-                                    ) : (
-                                        <div>
-                                            <LucideIcon icon="image" size={48} className={`mx-auto ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                                            <p className={`mt-2 ${fontSizeClasses[fontSize]} ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>點擊或拖曳圖片到這裡上傳</p>
-                                        </div>
-                                    )}
-                                    <input
-                                        id={`upload-${artwork.id}`}
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => handleImageUpload(e, artwork.id)}
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>編號</label>
-                                <input
-                                    type="text"
-                                    value={formData.number || ''}
-                                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="例：AW001"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>藝術家</label>
-                                <input
-                                    type="text"
-                                    value={formData.artist || ''}
-                                    onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="藝術家姓名"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>作品名稱</label>
-                                <input
-                                    type="text"
-                                    value={formData.title || ''}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="作品名稱"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>媒材</label>
-                                <input
-                                    type="text"
-                                    value={formData.medium || ''}
-                                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="例：油彩、畫布"
-                                />
-                            </div>
-                            
-                            <div className="col-span-1 md:col-span-2">
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>創作理念</label>
-                                <textarea
-                                    value={formData.concept || ''}
-                                    onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    rows="3"
-                                    placeholder="描述作品的創作理念"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>尺寸</label>
-                                <input
-                                    type="text"
-                                    value={formData.size || ''}
-                                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="例：60 x 80 cm"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>標價</label>
-                                <input
-                                    type="text"
-                                    value={formData.price || ''}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    placeholder="例：NT$ 45,000"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>狀態</label>
-                                <select
-                                    value={formData.status || 'Available'}
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                >
-                                    {statusOptions.map(status => (
-                                        <option key={status} value={status}>{status}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            
-                            <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-end gap-3 mt-4">
-                                <button
-                                    onClick={handleCancel}
-                                    className={`px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} text-white rounded-md transition-colors ${fontSizeClasses[fontSize]}`}
-                                >
-                                    取消
-                                </button>
-                                <button
-                                    onClick={isNew ? handleAddSave : handleSave}
-                                    className={`px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 ${fontSizeClasses[fontSize]}`}
-                                >
-                                    <LucideIcon icon="save" size={16} />
-                                    儲存
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            );
-
-            return (
-                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors`}>
-                    <div className={`max-w-7xl mx-auto p-2 md:p-4 ${fontSizeClasses[fontSize]}`}>
-                        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-4 md:p-6`}>
-                            {/* 頂部工具列 */}
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-                                <h1 className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>藝術作品管理系統</h1>
-                                
-                                <div className="flex flex-wrap gap-2 md:gap-3 w-full lg:w-auto">
-                                    {/* 視覺設定 */}
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => setDarkMode(!darkMode)}
-                                            className={`p-2 rounded-md ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}
-                                            title="切換深色模式"
-                                        >
-                                            <LucideIcon icon={darkMode ? "sun" : "moon"} size={20} className={darkMode ? "text-yellow-400" : ""} />
-                                        </button>
-                                        <select
-                                            value={fontSize}
-                                            onChange={(e) => setFontSize(e.target.value)}
-                                            className={`px-2 py-1 rounded-md ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200'}`}
-                                            title="調整字體大小"
-                                        >
-                                            <option value="small">小</option>
-                                            <option value="normal">中</option>
-                                            <option value="large">大</option>
-                                            <option value="xlarge">特大</option>
-                                        </select>
-                                    </div>
-                                    
-                                    {/* 資料庫狀態 */}
-                                    <div className={`flex items-center gap-2 px-3 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-md`}>
-                                        {isConnected ? (
-                                            <>
-                                                <LucideIcon icon="check-circle" size={16} className="text-green-600" />
-                                                <span className="text-sm text-green-600 hidden sm:inline">已連接雲端</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <LucideIcon icon="alert-circle" size={16} className="text-yellow-600" />
-                                                <span className="text-sm text-yellow-600 hidden sm:inline">本機模式</span>
-                                            </>
-                                        )}
-                                    </div>
-                                    
-                                    {/* 功能按鈕 */}
-                                    <button
-                                        onClick={handlePrint}
-                                        className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors flex items-center gap-2"
-                                        title="列印"
-                                    >
-                                        <LucideIcon icon="printer" size={20} />
-                                        <span className="hidden sm:inline">列印</span>
-                                    </button>
-                                    
-                                    <label className="px-3 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors flex items-center gap-2 cursor-pointer">
-                                        <LucideIcon icon="file-up" size={20} />
-                                        <span className="hidden sm:inline">匯入</span>
-                                        <input
-                                            type="file"
-                                            accept=".xlsx,.xls,.csv"
-                                            className="hidden"
-                                            onChange={handleFileImport}
-                                        />
-                                    </label>
-                                    
-                                    <button
-                                        onClick={exportToExcel}
-                                        className="px-3 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors flex items-center gap-2"
-                                    >
-                                        <LucideIcon icon="download" size={20} />
-                                        <span className="hidden sm:inline">匯出</span>
-                                    </button>
-                                    
-                                    <button
-                                        onClick={handleAdd}
-                                        className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center gap-2"
-                                    >
-                                        <LucideIcon icon="plus" size={20} />
-                                        <span className="hidden sm:inline">新增</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* 搜尋功能 */}
-                            <div className={`mb-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg`}>
-                                <div className="flex flex-col md:flex-row gap-3">
-                                    <div className="flex-1 relative">
-                                        <LucideIcon icon="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                                        <input
-                                            type="text"
-                                            placeholder="搜尋作品..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                        />
-                                    </div>
-                                    <select
-                                        value={searchField}
-                                        onChange={(e) => setSearchField(e.target.value)}
-                                        className={`px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white'} ${fontSizeClasses[fontSize]}`}
-                                    >
-                                        <option value="all">全部欄位</option>
-                                        <option value="artist">藝術家</option>
-                                        <option value="title">作品名稱</option>
-                                        <option value="medium">媒材</option>
-                                        <option value="status">狀態</option>
-                                    </select>
-                                </div>
-                                {searchTerm && (
-                                    <p className={`mt-2 ${fontSizeClasses[fontSize]} ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                        找到 {filteredArtworks.length} 筆符合的作品
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* 作品列表 - 桌面版 */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <table className="w-full table-auto">
-                                    <thead>
-                                        <tr className={darkMode ? 'bg-gray-700' : 'bg-gray-100'}>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>作品照片</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>編號</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>藝術家</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>作品名稱</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>創作理念</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>媒材</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>尺寸</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>標價</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>狀態</th>
-                                            <th className={`px-4 py-3 text-left ${darkMode ? 'text-gray-200' : ''}`}>操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {showAddForm && renderEditForm({ id: 'new' }, true)}
-                                        {filteredArtworks.map((artwork) => (
-                                            <Fragment key={artwork.id}>
-                                                {editingId === artwork.id ? (
-                                                    renderEditForm(artwork)
-                                                ) : (
-                                                    <tr className={`border-b ${darkMode ? 'border-gray-700 hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
-                                                        <td className="px-4 py-3">
-                                                            <div
-                                                                className={`w-20 h-20 border-2 border-dashed ${darkMode ? 'border-gray-600 hover:border-blue-400' : 'border-gray-300 hover:border-blue-400'} rounded flex items-center justify-center overflow-hidden transition-colors cursor-pointer`}
-                                                                onDrop={(e) => handleDrop(e, artwork.id)}
-                                                                onDragOver={(e) => e.preventDefault()}
-                                                                onClick={() => document.getElementById(`quick-upload-${artwork.id}`).click()}
-                                                            >
-                                                                {artwork.photo ? (
-                                                                    <img src={artwork.photo} alt={artwork.title} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <LucideIcon icon="upload" size={24} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
-                                                                )}
-                                                                <input
-                                                                    id={`quick-upload-${artwork.id}`}
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    className="hidden"
-                                                                    onChange={(e) => handleImageUpload(e, artwork.id)}
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className={`px-4 py-3 ${darkMode ? 'text-gray-200' : ''}`}>{artwork.number}</td>
-                                                        <td className={`px-4 py-3 ${darkMode ? 'text-gray-200' : ''}`}>{artwork.artist}</td>
-                                                        <td className={`px-4 py-3 font-medium ${darkMode ? 'text-gray-200' : ''}`}>{artwork.title}</td>
-                                                        <td className={`px-4 py-3 max-w-xs ${darkMode ? 'text-gray-200' : ''}`}>
-                                                            <p className="truncate">{artwork.concept}</p>
-                                                        </td>
-                                                        <td className={`px-4 py-3 ${darkMode ? 'text-gray-200' : ''}`}>{artwork.medium}</td>
-                                                        <td className={`px-4 py-3 ${darkMode ? 'text-gray-200' : ''}`}>{artwork.size}</td>
-                                                        <td className={`px-4 py-3 ${darkMode ? 'text-gray-200' : ''}`}>{artwork.price}</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[artwork.status]}`}>
-                                                                {artwork.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex gap-2">
-                                                                <button
-                                                                    onClick={() => handleEdit(artwork)}
-                                                                    className={`p-1 text-blue-600 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-100'} rounded transition-colors`}
-                                                                >
-                                                                    <LucideIcon icon="edit-2" size={18} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDelete(artwork.id)}
-                                                                    className={`p-1 text-red-600 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-red-100'} rounded transition-colors`}
-                                                                >
-                                                                    <LucideIcon icon="x" size={18} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </Fragment>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* 作品列表 - 手機版卡片 */}
-                            <div className="md:hidden space-y-4">
-                                {showAddForm && (
-                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg`}>
-                                        <h3 className={`font-bold mb-4 ${darkMode ? 'text-white' : ''}`}>新增作品</h3>
-                                        {/* 編輯表單內容 */}
-                                        <div className="space-y-3">
-                                            {/* 照片上傳 */}
-                                            <div>
-                                                <label className={`block ${fontSizeClasses[fontSize]} font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>作品照片</label>
-                                                <div
-                                                    className={`border-2 border-dashed ${darkMode ? 'border-gray-600' : 'border-gray-300'} rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer`}
-                                                    onDrop={(e) => handleDrop(e, 'new')}
-                                                    onDragOver={(e) => e.preventDefault()}
-                                                    onClick={() => document.getElementById(`upload-new`).click()}
-                                                >
-                                                    {formData.photo ? (
-                                                        <img src={formData.photo} alt="作品" className="max-h-32 mx-auto" />
-                                                    ) : (
-                                                        <div>
-                                                            <LucideIcon icon="image" size={48} className={`mx-auto ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                                                            <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>點擊或拖曳上傳</p>
-                                                        </div>
-                                                    )}
-                                                    <input
-                                                        id="upload-new"
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
-                                                        onChange={(e) => handleImageUpload(e, 'new')}
-                                                    />
-                                                </div>
-                                            </div>
-                                            
-                                            {/* 其他欄位 */}
-                                            <input
-                                                type="text"
-                                                placeholder="編號"
-                                                value={formData.number || ''}
-                                                onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="藝術家"
-                                                value={formData.artist || ''}
-                                                onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="作品名稱"
-                                                value={formData.title || ''}
-                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <textarea
-                                                placeholder="創作理念"
-                                                value={formData.concept || ''}
-                                                onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                rows="3"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="媒材"
-                                                value={formData.medium || ''}
-                                                onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="尺寸"
-                                                value={formData.size || ''}
-                                                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="標價"
-                                                value={formData.price || ''}
-                                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            />
-                                            <select
-                                                value={formData.status || 'Available'}
-                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                                className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                            >
-                                                {statusOptions.map(status => (
-                                                    <option key={status} value={status}>{status}</option>
-                                                ))}
-                                            </select>
-                                            
-                                            <div className="flex gap-3 mt-4">
-                                                <button
-                                                    onClick={handleCancel}
-                                                    className={`flex-1 px-4 py-2 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'} text-white rounded-md`}
-                                                >
-                                                    取消
-                                                </button>
-                                                <button
-                                                    onClick={handleAddSave}
-                                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md"
-                                                >
-                                                    儲存
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                {filteredArtworks.map((artwork) => (
-                                    <div key={artwork.id} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg`}>
-                                        {editingId === artwork.id ? (
-                                            // 編輯模式
-                                            <div className="space-y-3">
-                                                <h3 className={`font-bold mb-2 ${darkMode ? 'text-white' : ''}`}>編輯作品</h3>
-                                                {/* 照片上傳 */}
-                                                <div
-                                                    className={`border-2 border-dashed ${darkMode ? 'border-gray-600' : 'border-gray-300'} rounded-lg p-4 text-center`}
-                                                    onDrop={(e) => handleDrop(e, artwork.id)}
-                                                    onDragOver={(e) => e.preventDefault()}
-                                                    onClick={() => document.getElementById(`edit-upload-${artwork.id}`).click()}
-                                                >
-                                                    {formData.photo ? (
-                                                        <img src={formData.photo} alt="作品" className="max-h-32 mx-auto" />
-                                                    ) : (
-                                                        <div>
-                                                            <LucideIcon icon="upload" size={32} className={`mx-auto ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                                                            <p className="mt-2 text-sm">點擊或拖曳上傳</p>
-                                                        </div>
-                                                    )}
-                                                    <input
-                                                        id={`edit-upload-${artwork.id}`}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
-                                                        onChange={(e) => handleImageUpload(e, artwork.id)}
-                                                    />
-                                                </div>
-                                                
-                                                {/* 編輯欄位 */}
-                                                <input
-                                                    type="text"
-                                                    placeholder="編號"
-                                                    value={formData.number || ''}
-                                                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="藝術家"
-                                                    value={formData.artist || ''}
-                                                    onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="作品名稱"
-                                                    value={formData.title || ''}
-                                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <textarea
-                                                    placeholder="創作理念"
-                                                    value={formData.concept || ''}
-                                                    onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                    rows="3"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="媒材"
-                                                    value={formData.medium || ''}
-                                                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="尺寸"
-                                                    value={formData.size || ''}
-                                                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="標價"
-                                                    value={formData.price || ''}
-                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                />
-                                                <select
-                                                    value={formData.status || 'Available'}
-                                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : ''}`}
-                                                >
-                                                    {statusOptions.map(status => (
-                                                        <option key={status} value={status}>{status}</option>
-                                                    ))}
-                                                </select>
-                                                
-                                                <div className="flex gap-3">
-                                                    <button
-                                                        onClick={handleCancel}
-                                                        className={`flex-1 px-4 py-2 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'} text-white rounded-md`}
-                                                    >
-                                                        取消
-                                                    </button>
-                                                    <button
-                                                        onClick={handleSave}
-                                                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md"
-                                                    >
-                                                        儲存
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            // 顯示模式
-                                            <div>
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex-1">
-                                                        <h3 className={`font-bold ${darkMode ? 'text-white' : ''}`}>{artwork.title}</h3>
-                                                        <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{artwork.artist}</p>
-                                                    </div>
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[artwork.status]}`}>
-                                                        {artwork.status}
-                                                    </span>
-                                                </div>
-                                                
-                                                {artwork.photo && (
-                                                    <img src={artwork.photo} alt={artwork.title} className="w-full h-48 object-cover rounded mb-3" />
-                                                )}
-                                                
-                                                <div className={`space-y-1 text-sm ${darkMode ? 'text-gray-300' : ''}`}>
-                                                    <p><span className="font-medium">編號：</span>{artwork.number}</p>
-                                                    <p><span className="font-medium">媒材：</span>{artwork.medium}</p>
-                                                    <p><span className="font-medium">尺寸：</span>{artwork.size}</p>
-                                                    <p><span className="font-medium">標價：</span>{artwork.price}</p>
-                                                    <p className="pt-2"><span className="font-medium">創作理念：</span><br/>{artwork.concept}</p>
-                                                </div>
-                                                
-                                                <div className="flex gap-3 mt-4">
-                                                    <button
-                                                        onClick={() => handleEdit(artwork)}
-                                                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md flex items-center justify-center gap-2"
-                                                    >
-                                                        <LucideIcon icon="edit-2" size={16} />
-                                                        編輯
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(artwork.id)}
-                                                        className="px-4 py-2 bg-red-500 text-white rounded-md"
-                                                    >
-                                                        <LucideIcon icon="x" size={16} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* 使用說明 */}
-                            <div className={`mt-6 ${darkMode ? 'bg-blue-900' : 'bg-blue-50'} p-4 rounded-lg`}>
-                                <p className={`font-semibold mb-2 ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>💡 使用說明：</p>
-                                <div className={`grid md:grid-cols-2 gap-3 text-sm ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
-                                    <div>
-                                        <p className="font-medium mb-1">基本操作：</p>
-                                        <ul className="list-disc list-inside space-y-1 ml-2">
-                                            <li>點擊或拖曳圖片到虛線框內上傳照片</li>
-                                            <li>點擊編輯按鈕修改作品資料</li>
-                                            <li>使用搜尋框快速找到特定作品</li>
-                                            <li>調整字體大小或深色模式更舒適</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <p className="font-medium mb-1">資料管理：</p>
-                                        <ul className="list-disc list-inside space-y-1 ml-2">
-                                            <li>匯出 Excel 可備份所有作品資料</li>
-                                            <li>匯入功能支援 Excel 和 CSV 檔案</li>
-                                            <li>列印功能可產生精美的作品目錄</li>
-                                            <li>資料自動儲存在瀏覽器中</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            let htmlContent = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>藝術作品清單 / Artwork List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; text-align: center; }
+                        .header-info { text-align: center; margin-bottom: 20px; color: #666; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .status-available { color: #28a745; }
+                        .status-sold { color: #dc3545; }
+                        .status-on-hold { color: #ffc107; }
+                        .status-exhibition { color: #17a2b8; }
+                        .stats { margin-top: 30px; }
+                        .stats table { width: 50%; }
+                    </style>
+                </head>
+                <body>
+                    <h1>藝術作品清單 / Artwork Inventory</h1>
+                    <div class="header-info">
+                        <p>用戶 / User: ${currentUser.name}</p>
+                        <p>生成日期 / Generated: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}</p>
                     </div>
-                </div>
-            );
-        };
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>編號</th>
+                                <th>作品名稱</th>
+                                <th>藝術家</th>
+                                <th>年份</th>
+                                <th>尺寸</th>
+                                <th>標價</th>
+                                <th>狀態</th>
+                                <th>圖片</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
 
-        // 渲染應用程式
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ArtworkListManager />);
-        
-        // 初始化圖標
-        lucide.createIcons();
+            artworks.forEach(artwork => {
+                htmlContent += `
+                    <tr>
+                        <td>${artwork.number || ''}</td>
+                        <td>${artwork.title || ''}</td>
+                        <td>${artwork.artist || ''}</td>
+                        <td>${artwork.year || ''}</td>
+                        <td>${artwork.dimensions || ''}</td>
+                        <td>NT$${artwork.price ? artwork.price.toLocaleString() : '0'}</td>
+                        <td class="status-${artwork.status}">${statusTranslations[artwork.status] || artwork.status}</td>
+                        <td>${artwork.image ? '✓' : '✗'}</td>
+                    </tr>
+                `;
+            });
+
+            htmlContent += `
+                        </tbody>
+                    </table>
+                    <div class="stats">
+                        <h3>統計資訊 / Statistics</h3>
+                        <table>
+                            <tr><td>總作品數 / Total</td><td>${artworks.length}</td></tr>
+                            <tr><td>可售作品 / Available</td><td>${artworks.filter(a => a.status === 'available').length}</td></tr>
+                            <tr><td>已售作品 / Sold</td><td>${artworks.filter(a => a.status === 'sold').length}</td></tr>
+                            <tr><td>總價值 / Total Value</td><td>NT$${artworks.reduce((sum, a) => sum + (a.price || 0), 0).toLocaleString()}</td></tr>
+                            <tr><td>有圖片作品 / With Images</td><td>${artworks.filter(a => a.image).length}</td></tr>
+                        </table>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                showNotification('PDF生成完成 / PDF generated successfully');
+            }, 500);
+        }
+
+        // 清除所有資料
+        function clearAllData() {
+            if (confirm('確定要清除所有作品資料嗎？此操作無法復原 / Are you sure you want to clear all data? This action cannot be undone.')) {
+                artworks = [];
+                saveData();
+                showNotification('所有資料已清除 / All data cleared');
+                updateDashboard();
+                loadGallery();
+            }
+        }
+
+        // 初始化應用程式
+        function initApp() {
+            // 檢查是否有已登入的用戶
+            currentUser = UserManager.getCurrentUser();
+            
+            if (currentUser) {
+                // 如果已登入，顯示主應用
+                artworks = CloudStorage.loadUserData(currentUser.id);
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // 更新用戶界面
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                
+                // 啟動自動存檔
+                startAutoSave();
+                
+                // 更新儀表板
+                updateDashboard();
+            } else {
+                // 如果未登入，顯示登入頁面
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+            
+            // 設定圖片上傳
+            setupImageUpload(
+                document.getElementById('imageUpload'),
+                document.getElementById('imagePreview'),
+                document.getElementById('artworkImage')
+            );
+            
+            setupImageUpload(
+                document.getElementById('editImageUpload'),
+                document.getElementById('editImagePreview'),
+                document.getElementById('editImage')
+            );
+            
+            // 設定表單事件
+            document.getElementById('artworkForm').addEventListener('submit', handleArtworkSubmit);
+            document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
+            
+            // 設定登入和註冊表單
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                await login(email, password);
+            });
+            
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('registerConfirmPassword').value;
+                await register(name, email, password, confirmPassword);
+            });
+            
+            // 設定搜尋功能
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            
+            showNotification('系統已載入 / System loaded', 'success');
+        }
+
+        // 事件綁定
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // 點擊外部關閉下拉選單和模態視窗
+        document.addEventListener('click', function(event) {
+            // 處理下拉選單
+            const dropdown = document.getElementById('exportDropdown');
+            const button = event.target.closest('.btn-dropdown');
+            
+            if (!button && dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+            
+            // 處理模態視窗
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        });
+
+        // 頁面關閉前存檔
+        window.addEventListener('beforeunload', function() {
+            if (currentUser && artworks.length > 0) {
+                CloudStorage.saveUserData(currentUser.id, artworks);
+            }
+        });
+
+        // 頁面載入時隱藏載入器
+        window.addEventListener('load', function() {
+            hideLoading();
+        });
     </script>
 </body>
 </html>
