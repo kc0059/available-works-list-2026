@@ -2073,85 +2073,178 @@
             dropdown.classList.toggle('show');
         }
 
-        // Excel匯出功能
+        // 輔助函數
+        function safeString(str) {
+            if (!str) return '';
+            return String(str).replace(/[\x00-\x1F\x7F-\x9F]/g, ''); // 移除控制字符
+        }
+
+        function safeFileName(str) {
+            if (!str) return 'user';
+            return String(str).replace(/[<>:"/\\|?*]/g, ''); // 移除檔名中的非法字符
+        }
+
+        function formatDate(dateStr) {
+            try {
+                return new Date(dateStr).toLocaleDateString('zh-TW');
+            } catch {
+                return '';
+            }
+        }
+
+        function formatCurrency(amount) {
+            try {
+                return `NT$${Number(amount).toLocaleString()}`;
+            } catch {
+                return 'NT$0';
+            }
+        }
+
+        // 修正版Excel匯出功能
         function exportToExcel() {
-            document.getElementById('exportDropdown').classList.remove('show');
+            // 移除下拉選單
+            const dropdown = document.getElementById('exportDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
             
-            if (artworks.length === 0) {
+            if (!artworks || artworks.length === 0) {
                 showNotification('沒有作品可以匯出 / No artworks to export', 'info');
                 return;
             }
 
             try {
+                console.log('開始匯出Excel...');
+                
+                // 檢查XLSX是否可用
+                if (typeof XLSX === 'undefined') {
+                    throw new Error('XLSX庫未載入 / XLSX library not loaded');
+                }
+                
                 showLoading();
                 
+                // 創建新的工作簿
                 const wb = XLSX.utils.book_new();
                 
-                const data = artworks.map(artwork => ({
-                    '編號': artwork.number || '',
-                    '作品名稱': artwork.title || '',
-                    '藝術家': artwork.artist || '',
-                    '年份': artwork.year || '',
-                    '尺寸': artwork.dimensions || '',
-                    '媒材': artwork.medium || '',
-                    '標價': artwork.price || 0,
-                    '狀態': statusTranslations[artwork.status] || artwork.status,
-                    '創作理念': artwork.concept || '',
-                    '新增日期': artwork.dateAdded ? new Date(artwork.dateAdded).toLocaleDateString('zh-TW') : '',
-                    '圖片': artwork.image ? '有圖片' : '無圖片'
-                }));
+                // 準備主要作品數據，避免特殊字符問題
+                const data = artworks.map(artwork => {
+                    return {
+                        '編號': safeString(artwork.number),
+                        '作品名稱': safeString(artwork.title),
+                        '藝術家': safeString(artwork.artist),
+                        '年份': artwork.year || '',
+                        '尺寸': safeString(artwork.dimensions),
+                        '媒材': safeString(artwork.medium),
+                        '標價': typeof artwork.price === 'number' ? artwork.price : 0,
+                        '狀態': statusTranslations[artwork.status] || artwork.status || '',
+                        '創作理念': safeString(artwork.concept),
+                        '新增日期': artwork.dateAdded ? formatDate(artwork.dateAdded) : '',
+                        '圖片狀態': artwork.image ? '有圖片' : '無圖片'
+                    };
+                });
                 
+                console.log('準備的數據:', data);
+                
+                // 創建主要工作表
                 const ws = XLSX.utils.json_to_sheet(data);
                 
+                // 設定列寬
                 const colWidths = [
-                    { wch: 12 }, { wch: 25 }, { wch: 20 }, { wch: 8 },
-                    { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 },
-                    { wch: 40 }, { wch: 15 }, { wch: 10 }
+                    { wch: 12 }, // 編號
+                    { wch: 25 }, // 作品名稱
+                    { wch: 20 }, // 藝術家
+                    { wch: 8 },  // 年份
+                    { wch: 15 }, // 尺寸
+                    { wch: 15 }, // 媒材
+                    { wch: 15 }, // 標價
+                    { wch: 12 }, // 狀態
+                    { wch: 40 }, // 創作理念
+                    { wch: 15 }, // 新增日期
+                    { wch: 10 }  // 圖片狀態
                 ];
                 ws['!cols'] = colWidths;
                 
+                // 添加主要工作表
                 XLSX.utils.book_append_sheet(wb, ws, '作品清單');
                 
-                const imageData = artworks
-                    .filter(artwork => artwork.image)
-                    .map(artwork => ({
-                        '編號': artwork.number,
-                        '作品名稱': artwork.title,
-                        '圖片資料': artwork.image
-                    }));
-                
-                if (imageData.length > 0) {
-                    const imageWs = XLSX.utils.json_to_sheet(imageData);
-                    imageWs['!cols'] = [
-                        { wch: 12 }, { wch: 25 }, { wch: 50 }
-                    ];
-                    XLSX.utils.book_append_sheet(wb, imageWs, '圖片資料');
-                }
-                
+                // 創建統計工作表（不包含圖片數據，避免檔案過大）
                 const statsData = [
                     { '統計項目': '總作品數', '數量': artworks.length },
                     { '統計項目': '可售作品', '數量': artworks.filter(a => a.status === 'available').length },
                     { '統計項目': '已售作品', '數量': artworks.filter(a => a.status === 'sold').length },
                     { '統計項目': '保留中作品', '數量': artworks.filter(a => a.status === 'on-hold').length },
                     { '統計項目': '展覽中作品', '數量': artworks.filter(a => a.status === 'exhibition').length },
-                    { '統計項目': '總價值', '數量': `NT$${artworks.reduce((sum, a) => sum + (a.price || 0), 0).toLocaleString()}` },
+                    { '統計項目': '總價值', '數量': formatCurrency(artworks.reduce((sum, a) => sum + (a.price || 0), 0)) },
                     { '統計項目': '有圖片作品', '數量': artworks.filter(a => a.image).length }
                 ];
                 
                 const statsWs = XLSX.utils.json_to_sheet(statsData);
                 statsWs['!cols'] = [{ wch: 20 }, { wch: 20 }];
-                XLSX.utils.book_append_sheet(wb, statsWs, '統計');
+                XLSX.utils.book_append_sheet(wb, statsWs, '統計資料');
                 
-                const fileName = `artwork-inventory-${currentUser.name}-${new Date().toISOString().split('T')[0]}.xlsx`;
+                // 生成安全的檔名
+                const userName = safeFileName(currentUser.name || 'user');
+                const dateStr = new Date().toISOString().split('T')[0];
+                const fileName = `artwork-inventory-${userName}-${dateStr}.xlsx`;
+                
+                console.log('準備寫入檔案:', fileName);
+                
+                // 寫入檔案
                 XLSX.writeFile(wb, fileName);
                 
-                showNotification('Excel檔案匯出成功！ / Excel file exported successfully!');
+                console.log('Excel檔案匯出完成');
+                showNotification('Excel檔案匯出成功！ / Excel file exported successfully!', 'success');
                 
             } catch (error) {
                 console.error('匯出Excel錯誤:', error);
-                showNotification('匯出Excel失敗：' + error.message, 'error');
+                
+                // 提供更詳細的錯誤信息
+                let errorMessage = '匯出Excel失敗：';
+                if (error.message.includes('not loaded')) {
+                    errorMessage += '缺少Excel庫文件';
+                } else if (error.message.includes('write')) {
+                    errorMessage += '寫入檔案失敗，請檢查瀏覽器下載設定';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showNotification(errorMessage, 'error');
+                
+                // 嘗試降級匯出（只匯出基本數據）
+                if (confirm('是否嘗試簡化版匯出？ / Try simplified export?')) {
+                    exportSimpleExcel();
+                }
+                
             } finally {
                 hideLoading();
+            }
+        }
+
+        // 簡化版Excel匯出（備用方案）
+        function exportSimpleExcel() {
+            try {
+                const wb = XLSX.utils.book_new();
+                
+                // 只匯出基本數據
+                const simpleData = artworks.map(artwork => ({
+                    '編號': artwork.number || '',
+                    '名稱': artwork.title || '',
+                    '藝術家': artwork.artist || '',
+                    '價格': artwork.price || 0,
+                    '狀態': statusTranslations[artwork.status] || ''
+                }));
+                
+                const ws = XLSX.utils.json_to_sheet(simpleData);
+                XLSX.utils.book_append_sheet(wb, ws, 'Artworks');
+                
+                const fileName = `artworks-simple-${Date.now()}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                showNotification('簡化版Excel匯出成功！', 'success');
+                
+            } catch (error) {
+                console.error('簡化版匯出也失敗:', error);
+                showNotification('Excel匯出完全失敗，請檢查瀏覽器設定', 'error');
             }
         }
 
@@ -2348,6 +2441,12 @@
         // 頁面載入時隱藏載入器
         window.addEventListener('load', function() {
             hideLoading();
+            
+            // 檢查依賴
+            console.log('XLSX 可用性:', typeof XLSX !== 'undefined');
+            if (typeof XLSX !== 'undefined') {
+                console.log('XLSX 版本:', XLSX.version);
+            }
         });
     </script>
 </body>
