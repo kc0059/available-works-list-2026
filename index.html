@@ -406,6 +406,145 @@
             margin-top: 2rem;
         }
 
+        .artwork-list {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .artwork-list.active {
+            display: block;
+        }
+
+        .artwork-list-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .artwork-list-item:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .artwork-list-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .artwork-list-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .artwork-list-detail {
+            padding: 0.5rem 0;
+        }
+
+        .artwork-list-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .artwork-list-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .view-controls h2 {
+            margin: 0;
+        }
+
+        .view-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .view-btn {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .view-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .view-btn.active:hover {
+            background: #5a67d8;
+        }
+
+        .print-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            background: #218838;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-content, 
+            .print-content * {
+                visibility: visible;
+            }
+            
+            .print-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+
         .artwork-card {
             background: white;
             border-radius: 12px;
@@ -752,8 +891,29 @@
                 font-size: 16px;
             }
 
-            .form-group {
-                margin-bottom: 1rem;
+            .view-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .view-buttons {
+                justify-content: center;
+            }
+
+            .artwork-list-info {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .artwork-list-item {
+                grid-template-columns: 60px 1fr;
+                gap: 0.8rem;
+            }
+
+            .artwork-list-image {
+                width: 60px;
+                height: 60px;
             }
 
             .notification {
@@ -1017,19 +1177,25 @@
                         <input type="text" id="dimensions" placeholder="例：50x70cm">
                     </div>
                     <div class="form-group">
-                        <label for="price">標價 / Price (NT$)</label>
-                        <input type="number" id="price" min="0" step="1">
+                        <label for="medium">媒材 / Medium</label>
+                        <input type="text" id="medium" placeholder="例：油彩、壓克力、水彩等...">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="status">狀態 / Status</label>
-                    <select id="status">
-                        <option value="available">可售 / Available</option>
-                        <option value="sold">已售 / Sold</option>
-                        <option value="on-hold">保留中 / On Hold</option>
-                        <option value="exhibition">展覽中 / In Exhibition</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">標價 / Price (NT$)</label>
+                        <input type="number" id="price" min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">狀態 / Status</label>
+                        <select id="status">
+                            <option value="available">可售 / Available</option>
+                            <option value="sold">已售 / Sold</option>
+                            <option value="on-hold">保留中 / On Hold</option>
+                            <option value="exhibition">展覽中 / In Exhibition</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1045,7 +1211,20 @@
         </div>
 
         <div id="gallery" class="tab-content">
-            <h2>作品庫 / Artwork Gallery</h2>
+            <div class="view-controls">
+                <h2>作品庫 / Artwork Gallery</h2>
+                <div class="view-buttons">
+                    <button class="view-btn active" onclick="switchView('grid')" title="磚形顯示 / Grid View">
+                        📱
+                    </button>
+                    <button class="view-btn" onclick="switchView('list')" title="列表顯示 / List View">
+                        📋
+                    </button>
+                    <button class="print-btn" onclick="printArtworks()">
+                        🖨️ 列印 / Print
+                    </button>
+                </div>
+            </div>
             
             <div class="search-filters">
                 <div class="form-group">
@@ -1076,6 +1255,10 @@
 
             <div class="artwork-grid" id="artworkGrid">
                 <!-- 作品卡片將在這裡顯示 / Artwork cards will be displayed here -->
+            </div>
+
+            <div class="artwork-list" id="artworkList">
+                <!-- 作品列表將在這裡顯示 / Artwork list will be displayed here -->
             </div>
         </div>
     </div>
@@ -1127,19 +1310,25 @@
                         <input type="text" id="editDimensions">
                     </div>
                     <div class="form-group">
-                        <label for="editPrice">標價 / Price (NT$)</label>
-                        <input type="number" id="editPrice" min="0" step="1">
+                        <label for="editMedium">媒材 / Medium</label>
+                        <input type="text" id="editMedium" placeholder="例：油彩、壓克力、水彩等...">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="editStatus">狀態 / Status</label>
-                    <select id="editStatus">
-                        <option value="available">可售 / Available</option>
-                        <option value="sold">已售 / Sold</option>
-                        <option value="on-hold">保留中 / On Hold</option>
-                        <option value="exhibition">展覽中 / In Exhibition</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editPrice">標價 / Price (NT$)</label>
+                        <input type="number" id="editPrice" min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStatus">狀態 / Status</label>
+                        <select id="editStatus">
+                            <option value="available">可售 / Available</option>
+                            <option value="sold">已售 / Sold</option>
+                            <option value="on-hold">保留中 / On Hold</option>
+                            <option value="exhibition">展覽中 / In Exhibition</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -1164,6 +1353,7 @@
         let currentUser = null;
         let currentEditId = null;
         let autoSaveInterval = null;
+        let currentView = 'grid'; // 'grid' 或 'list'
 
         // 狀態翻譯
         const statusTranslations = {
@@ -1508,6 +1698,7 @@
                     artist: artist,
                     year: document.getElementById('yearCreated').value || null,
                     dimensions: document.getElementById('dimensions').value.trim(),
+                    medium: document.getElementById('medium').value.trim(),
                     price: parseFloat(document.getElementById('price').value) || 0,
                     status: document.getElementById('status').value,
                     concept: document.getElementById('concept').value.trim(),
@@ -1552,6 +1743,7 @@
                     artist: document.getElementById('editArtist').value.trim(),
                     year: document.getElementById('editYear').value || null,
                     dimensions: document.getElementById('editDimensions').value.trim(),
+                    medium: document.getElementById('editMedium').value.trim(),
                     price: parseFloat(document.getElementById('editPrice').value) || 0,
                     status: document.getElementById('editStatus').value,
                     concept: document.getElementById('editConcept').value.trim(),
@@ -1597,6 +1789,165 @@
             }
         }
 
+        // 視圖切換功能
+        function switchView(viewType) {
+            currentView = viewType;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 切換視圖
+            const grid = document.getElementById('artworkGrid');
+            const list = document.getElementById('artworkList');
+            
+            if (viewType === 'grid') {
+                grid.style.display = 'grid';
+                list.classList.remove('active');
+            } else {
+                grid.style.display = 'none';
+                list.classList.add('active');
+            }
+            
+            // 重新載入當前顯示的作品
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            let filteredArtworks = artworks.filter(artwork => {
+                const matchesSearch = !searchTerm || 
+                    artwork.title.toLowerCase().includes(searchTerm) ||
+                    artwork.artist.toLowerCase().includes(searchTerm) ||
+                    artwork.number.toLowerCase().includes(searchTerm);
+                    
+                const matchesStatus = !statusFilter || artwork.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            // 排序
+            filteredArtworks.sort((a, b) => {
+                switch (sortBy) {
+                    case 'number':
+                        return a.number.localeCompare(b.number);
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'artist':
+                        return a.artist.localeCompare(b.artist);
+                    case 'year':
+                        return (b.year || 0) - (a.year || 0);
+                    case 'price':
+                        return (b.price || 0) - (a.price || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            displayArtworks(filteredArtworks);
+        }
+
+        // 列印功能
+        function printArtworks() {
+            // 獲取當前顯示的作品
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            let filteredArtworks = artworks.filter(artwork => {
+                const matchesSearch = !searchTerm || 
+                    artwork.title.toLowerCase().includes(searchTerm) ||
+                    artwork.artist.toLowerCase().includes(searchTerm) ||
+                    artwork.number.toLowerCase().includes(searchTerm);
+                    
+                const matchesStatus = !statusFilter || artwork.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filteredArtworks.length === 0) {
+                showNotification('沒有作品可以列印 / No artworks to print', 'info');
+                return;
+            }
+
+            // 創建列印內容
+            let printContent = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>藝術作品清單 / Artwork List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; text-align: center; margin-bottom: 10px; }
+                        .header-info { text-align: center; margin-bottom: 20px; color: #666; font-size: 14px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .status-available { color: #28a745; }
+                        .status-sold { color: #dc3545; }
+                        .status-on-hold { color: #ffc107; }
+                        .status-exhibition { color: #17a2b8; }
+                        .artwork-image { width: 60px; height: 60px; object-fit: cover; }
+                        @page { size: A4; margin: 1cm; }
+                    </style>
+                </head>
+                <body>
+                    <h1>藝術作品清單 / Artwork Inventory</h1>
+                    <div class="header-info">
+                        <p>用戶 / User: ${currentUser.name} | 列印日期 / Print Date: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}</p>
+                        <p>共 ${filteredArtworks.length} 件作品 / Total ${filteredArtworks.length} artworks</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>圖片</th>
+                                <th>編號</th>
+                                <th>作品名稱</th>
+                                <th>藝術家</th>
+                                <th>年份</th>
+                                <th>尺寸</th>
+                                <th>媒材</th>
+                                <th>標價</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            filteredArtworks.forEach(artwork => {
+                printContent += `
+                    <tr>
+                        <td>${artwork.image ? `<img src="${artwork.image}" class="artwork-image">` : '-'}</td>
+                        <td>${artwork.number || ''}</td>
+                        <td>${artwork.title || ''}</td>
+                        <td>${artwork.artist || ''}</td>
+                        <td>${artwork.year || ''}</td>
+                        <td>${artwork.dimensions || ''}</td>
+                        <td>${mediumTranslations[artwork.medium] || artwork.medium || ''}</td>
+                        <td>NT${artwork.price ? artwork.price.toLocaleString() : '0'}</td>
+                        <td class="status-${artwork.status}">${statusTranslations[artwork.status] || artwork.status}</td>
+                    </tr>
+                `;
+            });
+
+            printContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            // 開啟新視窗並列印
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                showNotification('列印視窗已開啟 / Print window opened');
+            }, 500);
+        }
+
         // 作品庫載入
         function loadGallery() {
             displayArtworks(artworks);
@@ -1604,15 +1955,22 @@
 
         function displayArtworks(artworksToShow) {
             const grid = document.getElementById('artworkGrid');
-            if (!grid) return;
+            const list = document.getElementById('artworkList');
             
+            if (!grid || !list) return;
+            
+            // 清空內容
             grid.innerHTML = '';
+            list.innerHTML = '';
             
             if (artworksToShow.length === 0) {
-                grid.innerHTML = '<p>沒有找到作品。請先新增一些作品！ / No artworks found. Please add some artworks first!</p>';
+                const emptyMessage = '<p>沒有找到作品。請先新增一些作品！ / No artworks found. Please add some artworks first!</p>';
+                grid.innerHTML = emptyMessage;
+                list.innerHTML = emptyMessage;
                 return;
             }
             
+            // 磚形視圖
             artworksToShow.forEach(artwork => {
                 const card = document.createElement('div');
                 card.className = 'artwork-card';
@@ -1625,10 +1983,11 @@
                         <div class="artwork-details">
                             編號 / Number：${artwork.number} ${artwork.year ? `• ${artwork.year}年` : ''}
                             ${artwork.dimensions ? `• ${artwork.dimensions}` : ''}
+                            ${artwork.medium ? `• ${artwork.medium}` : ''}
                         </div>
                         ${artwork.concept ? `<div class="artwork-details" style="font-style: italic; color: #555; margin-top: 0.5rem;">理念 / Concept: ${artwork.concept.substring(0, 80)}${artwork.concept.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="artwork-details">
-                            ${artwork.price > 0 ? `NT$${artwork.price.toLocaleString()}` : '未定價 / Price not set'}
+                            ${artwork.price > 0 ? `NT${artwork.price.toLocaleString()}` : '未定價 / Price not set'}
                             <span class="status-badge status-${artwork.status}">${statusTranslations[artwork.status]}</span>
                         </div>
                         <div class="artwork-actions">
@@ -1639,6 +1998,42 @@
                 `;
                 
                 grid.appendChild(card);
+            });
+            
+            // 列表視圖
+            artworksToShow.forEach(artwork => {
+                const listItem = document.createElement('div');
+                listItem.className = 'artwork-list-item';
+                
+                listItem.innerHTML = `
+                    ${artwork.image ? `<img src="${artwork.image}" alt="${artwork.title}" class="artwork-list-image">` : '<div class="artwork-list-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.8rem;">無圖</div>'}
+                    <div class="artwork-list-info">
+                        <div class="artwork-list-detail">
+                            <div class="artwork-list-title">${artwork.title}</div>
+                            <div class="artwork-list-subtitle">編號：${artwork.number}</div>
+                        </div>
+                        <div class="artwork-list-detail">
+                            <div class="artwork-list-title">${artwork.artist}</div>
+                            <div class="artwork-list-subtitle">${artwork.year ? `${artwork.year}年` : '年份未知'}</div>
+                        </div>
+                        <div class="artwork-list-detail">
+                            <div class="artwork-list-title">${artwork.dimensions || '未指定尺寸'}</div>
+                            <div class="artwork-list-subtitle">${artwork.medium || '未指定媒材'}</div>
+                        </div>
+                        <div class="artwork-list-detail">
+                            <div class="artwork-list-title">${artwork.price > 0 ? `NT${artwork.price.toLocaleString()}` : '未定價'}</div>
+                            <div class="artwork-list-subtitle">
+                                <span class="status-badge status-${artwork.status}">${statusTranslations[artwork.status]}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="artwork-actions">
+                        <button class="btn btn-primary" onclick="editArtwork(${artwork.id})" style="margin-bottom: 0.5rem;">編輯</button>
+                        <button class="btn btn-danger" onclick="deleteArtworkConfirm(${artwork.id})">刪除</button>
+                    </div>
+                `;
+                
+                list.appendChild(listItem);
             });
         }
 
@@ -1693,6 +2088,7 @@
             document.getElementById('editArtist').value = artwork.artist || '';
             document.getElementById('editYear').value = artwork.year || '';
             document.getElementById('editDimensions').value = artwork.dimensions || '';
+            document.getElementById('editMedium').value = artwork.medium || '';
             document.getElementById('editPrice').value = artwork.price || '';
             document.getElementById('editStatus').value = artwork.status || 'available';
             document.getElementById('editConcept').value = artwork.concept || '';
@@ -1753,6 +2149,7 @@
                     '藝術家': artwork.artist || '',
                     '年份': artwork.year || '',
                     '尺寸': artwork.dimensions || '',
+                    '媒材': artwork.medium || '',
                     '標價': artwork.price || 0,
                     '狀態': statusTranslations[artwork.status] || artwork.status,
                     '創作理念': artwork.concept || '',
@@ -1770,6 +2167,7 @@
                     { wch: 20 }, // 藝術家
                     { wch: 8 },  // 年份
                     { wch: 15 }, // 尺寸
+                    { wch: 15 }, // 媒材
                     { wch: 15 }, // 標價
                     { wch: 12 }, // 狀態
                     { wch: 40 }, // 創作理念
